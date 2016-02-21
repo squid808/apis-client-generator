@@ -1,0 +1,85 @@
+{% comment %}
+
+
+There can be two types of methods wrapping the normal google methods - those that return paged results and those that do
+not. The paged methods are discerned by the presence of the pageToken parameter, and so we added a property to the
+method to allow us to easily see if this needs to be a paged method or not.
+
+Paged methods allow gShell to accept a parameter of 'properties' for any non-required parameters, and also custom params
+like a Function<> for a progress bar, and a totalResults.
+
+
+{% endcomment %}{% indent %}
+{% if method.isPageable %}
+{% noeol %}{% noblank %}
+public List<{{ api.module.name }}.Data.{{ method.finalReturnType }}> {{ method.className }}(
+    {% eol %}{% indent %}{% call_template _gshell_dotnet_methodparams method=method showCustomProperties=True %}){% endindent %}
+{% endnoblank %}{% endnoeol %}
+{
+    var results = new List<{{ api.module.name }}.Data.{{ method.finalReturnType }}>();
+
+    {% noeol %}{% noblank %}
+    {{ api.versionNoDots }}.{% if resource.parentResourceResourceChain %}{{ resource.parentResourceResourceChain }}{% endif %}{{ resource.className }}Resource.{{ method.className }}Request request = GetService().
+    {{ resource.parentResourceChain }}{{ resource.className }}.{{ method.className }}(
+    {% indent %}{% indent %}{% eol %}{% call_template _gshell_dotnet_methodparams method=method hideTypes=True %});{% endindent %}{% endindent %}
+    {% endnoblank %}{% endnoeol %}
+
+    {% if method.optionalParameters|length > 0 %}if (properties != null)
+    {{% noeol %}{% noblank %}{% eol %}
+
+        {% for p in method.optionalParameters %}
+        {% if not p.codeName == "pageToken" %}
+        request.{% if p.enumType %}{% camel_case p.memberName %}{% else %}{{ p.memberName }}{% endif %} = properties.{{ p.codeName }};{% eol %}
+        {% endif %}{% endfor %}
+        {% endnoblank %}{% endnoeol %}
+    }{% endif %}
+
+    {% if method.hasMaxResultsParameter %}if (null != properties.startProgressBar)
+    {
+        properties.startProgressBar("Gathering {{ resource.className }}",
+            string.Format("-Collecting {{ resource.className }} {0} to {1}", "1", request.MaxResults.ToString()));
+    }{% endif %}
+
+    {{ api.module.name }}.Data.{{ method.finalReturnType }} pagedResult = request.Execute();
+
+    if (pagedResult != null)
+    {
+        results.Add(pagedResult);
+
+        while (!string.IsNullOrWhiteSpace(pagedResult.NextPageToken) &&
+            pagedResult.NextPageToken != request.PageToken{% if method.hasMaxResultsParameter %} &&
+        (properties.totalResults == 0 || results.Count < properties.totalResults){% endif %})
+        {
+            request.PageToken = pagedResult.NextPageToken;
+            {% if method.hasMaxResultsParameter %}
+            if (null != properties.updateProgressBar)
+            {
+                properties.updateProgressBar(5, 10, "Gathering {{ resource.className }}",
+                        string.Format("-Collecting {{ resource.className }} {0} to {1}",
+                            (results.Count + 1).ToString(),
+                            (results.Count + request.MaxResults).ToString()));
+            }
+            {% endif %}
+            pagedResult = request.Execute();
+            results.Add(pagedResult);
+        }
+
+        {% if method.hasMaxResultsParameter %}if (null != properties.updateProgressBar)
+        {
+            properties.updateProgressBar(1, 2, "Gathering {{ resource.className }}",
+                    string.Format("-Returning {0} results.", results.Count.ToString()));
+        }{% endif %}
+    }
+
+    return results;
+}
+{% else %}{# NOT PAGEABLE #}
+{% noeol %}{% noblank %}
+public{% sp %}{% if method.finalReturnType %}{{ api.module.name }}.Data.{{ method.finalReturnType }}
+{% else %}void{% endif %}{% sp %}
+{{ method.className }}
+{% eol %}({% call_template _gshell_dotnet_methodparams method=method showCustomProperties=True %}){% eol %}
+{{% eol %}
+    {% indent %}{% if method.finalReturnType %}return {% endif %}GetService().{{ resource.parentResourceChain }}{{ resource.className }}.{{ method.className}}({% call_template _gshell_dotnet_methodparams method=method hideTypes=True %}).Execute();{% endindent %}{% eol %}
+}{% eol %}{% endnoblank %}{% endnoeol %}
+{% endif %}{% endindent %}

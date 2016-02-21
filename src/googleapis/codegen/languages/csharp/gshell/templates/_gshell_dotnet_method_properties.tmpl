@@ -1,0 +1,43 @@
+{% comment %}
+
+
+
+
+
+{% endcomment %}
+{% indent %}{% noeol %}{% noblank %}
+{% for method in resource.methods %}{% if method.optionalParameters|length > 0 %}
+public class {{ resource.className }}{{ method.className }}Properties{% eol %}
+{{% eol %}
+{% for p in method.optionalParameters %}{% indent %}
+
+{# FOR MAX RESULTS JUST SET IT TO A NON NULLABLE #}
+{% if p.codeName == "maxResults" %}
+public int {{ p.codeName }} = {% if p.maximum %}{{ p.maximum }}{% else %}{{ "0" }}{% endif %};
+{# DO NOT INCLUDE PAGE TOKEN SINCE THIS IS HANDLED IN THE PAGED RESULTS CODE #}
+{% elif not p.codeName == "pageToken" %}{# TODO: THIS LEAVES A BLANK LINE INSTEAD #}
+public
+{% if p.enumType %}
+{{ api.versionNoDots }}.{% if resource.parentResourceResourceChain %}{{ resource.parentResourceResourceChain }}{% endif %}{{ resource.className }}Resource.{{ method.className }}Request.{% camel_case p.memberName %}Enum?
+{% elif p.repeated %}
+Google.Apis.Util.Repeatable<string>
+{% else %}
+{% if parameter.required %}
+ {{ p.requiredType }}
+      {% else %}
+ {{ p.codeType }}
+      {% endif %}
+{% endif %}
+ {{ p.codeName }} = null; //test
+{% endif %}
+{% endindent %}{% eol %}{% endfor %}
+
+{# INCLUDE CUSTOM PARAMS IF THIS IS A PAGED RESULT #}
+{% if method.isPageable %}{% if method.hasMaxResultsParameter %}
+    public Action<string, string> startProgressBar = null;{% eol %}
+    public Action<int, int, string, string> updateProgressBar = null;{% eol %}
+    public int totalResults = 0;{% eol %}
+{% endif %}{% endif %}
+}{% eol %}{% eol %}
+{% endif %}{% endfor %}
+{% endnoblank %}{% endnoeol %}{% endindent %}

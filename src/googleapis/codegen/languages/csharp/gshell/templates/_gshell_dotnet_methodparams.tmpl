@@ -1,0 +1,39 @@
+{% comment %}
+
+
+The explicit method properties should be only the required parameter, and optional parameters should be brought in via
+a custom param object as templated in the resource file.
+
+Template Parameters:
+hideTypes: hide the type of the parameter. Used when being called from anything other than a signature
+showCustomProperties: show the custom properties for gShell. Useful when declaring a method signature.
+
+
+{% endcomment %}
+{% parameter_list %}
+
+{% if method.requestType %}
+    {% parameter %}
+{% if not hideTypes %}{{ method.requestType.fullClassName }}{% endif %} body
+    {% end_parameter %}
+{% endif %}
+
+{% for p in method.requiredParameters %}
+    {% parameter %}
+        {% if not hideTypes %}{% if p.enumType %}
+{{ api.versionNoDots }}.{% if resource.parentResourceResourceChain %}{{ resource.parentResourceResourceChain }}{% endif %}{{ resource.className }}Resource.{{ method.className }}Request.{% camel_case p.enumType.className %}Enum
+        {% elif p.repeated %}
+Google.Apis.Util.Repeatable<string>
+        {% else %}
+{{ p.requiredType }}
+        {% endif %}
+ {% endif %}{{ p.codeName }}
+    {% end_parameter %}
+{% endfor %}
+
+{% if method.optionalParameters|length > 0 %}
+{% if showCustomProperties %}
+{% parameter %}
+{% if not hideTypes %}{{ resource.className }}{{ method.className }}Properties {% endif %}properties{% if not hideTypes %} = null{% endif %}
+{% end_parameter %}
+{% endif %}{% endif %}{% end_parameter_list %}

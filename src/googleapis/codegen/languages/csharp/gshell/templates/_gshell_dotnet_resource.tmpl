@@ -1,0 +1,13 @@
+{% comment %}
+
+
+{# THIS LOOP IS FOR ALL resources and methods FOR THIS API, E.G. LIST OR GET #}
+
+
+{% endcomment %}
+public class {{ resource.className }}
+{
+{% call_template _gshell_dotnet_method_properties resource=resource %}
+{% for method in resource.methods %}{% call_template _gshell_dotnet_resource_method method=method %}{% endfor %}
+{% for subr in resource.resources %}{% eol %}{% indent %}{% call_template _gshell_dotnet_resource resource=subr %}{% endindent %}{% eol %}{% endfor %}
+}

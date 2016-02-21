@@ -35,6 +35,8 @@ import logging
 import operator
 import urlparse
 
+from pprint import pprint
+
 
 from googleapis.codegen import data_types
 from googleapis.codegen import template_objects
@@ -551,6 +553,20 @@ class Resource(template_objects.CodeObject):
     self.ValidateName(name)
     class_name = api.ToClassName(name, self, element_type='resource')
     self.SetTemplateValue('className', class_name)
+    #CUSTOM
+    if parent != None and parent != api:
+      if parent._def_dict.has_key('parentResourceChain'):
+        self.SetTemplateValue('parentResourceChain', parent._def_dict['parentResourceChain']
+                              + parent._def_dict['className']+".")
+      else:
+        self.SetTemplateValue('parentResourceChain', parent._def_dict['className']+".")
+    if parent != None and parent != api:
+      if parent._def_dict.has_key('parentResourceResourceChain'):
+        self.SetTemplateValue('parentResourceResourceChain',
+                              parent._def_dict['parentResourceResourceChain']
+                              + parent._def_dict['className']+"Resource.")
+      else:
+        self.SetTemplateValue('parentResourceResourceChain', parent._def_dict['className']+"Resource.")
     # Replace methods dict with Methods
     self._methods = []
     method_dict = self.values.get('methods') or {}
@@ -736,6 +752,7 @@ class Method(template_objects.CodeObject):
 
     self._InitMediaUpload(parent)
     self._InitPageable(api)
+    self._InitFinalReturnType(api)
     api.AddMethod(self)
 
   def _InitMediaUpload(self, parent):
@@ -765,6 +782,22 @@ class Method(template_objects.CodeObject):
         and self.FindCodeObjectWithWireName(
             self.optional_parameters, 'pageToken')):
       self.SetTemplateValue('isPageable', True)
+
+  #CUSTOM
+  def _InitFinalReturnType(self, api):
+    '''Determine what the final return type is - .Object or .Objects'''
+    response_type = self.values.get('responseType')
+    if (response_type != api.void_type):
+      #print("for " + self._def_dict['id'] + " the first return type is " + self._def_dict['response']['$ref'])
+      self.SetTemplateValue('finalReturnType', self._def_dict['response']['$ref'])
+      response_params = response_type['properties']
+      '''for rProp in response_params:
+        if (rProp._def_dict['wireName'] == 'items'
+          and '$ref' in rProp['items']):
+            finalReturnValue = rProp['items']['$ref']
+            print ("looks like the final type should actually be " + finalReturnValue)
+            self.SetTemplateValue('finalReturnType', finalReturnValue)'''
+
 
   def _SetUploadTemplateValues(self, upload_protocol, protocol_dict):
     """Sets upload specific template values.
@@ -836,6 +869,15 @@ class Method(template_objects.CodeObject):
 
   def queryParameters(self):  # pylint: disable=g-bad-name
     return self.query_parameters
+
+  #CUSTOM
+  @property
+  def hasMaxResultsParameter(self):
+    return any(x for x in self.values['parameters'] if x.codeName == "maxResults")
+    #for var in self.values['parameters']:
+      #pprint(var._def_dict)
+      #for property, value in vars(var).iteritems():
+        #print property, ": ", value
 
 
 class Parameter(template_objects.CodeObject):
