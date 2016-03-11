@@ -33,11 +33,11 @@ Google.Apis.Util.Repeatable<string>
 {% endindent %}{% eol %}{% endfor %}
 
 {# INCLUDE CUSTOM PARAMS IF THIS IS A PAGED RESULT #}
-{% if method.isPageable %}{% if method.hasMaxResultsParameter %}
+{% if method.isPageable %}
     public Action<string, string> startProgressBar = null;{% eol %}
     public Action<int, int, string, string> updateProgressBar = null;{% eol %}
     public int totalResults = 0;{% eol %}
-{% endif %}{% endif %}
+{% endif %}
 }{% eol %}{% eol %}
 {% endif %}{% endfor %}
 {% endnoblank %}{% endnoeol %}{% endindent %}

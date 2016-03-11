@@ -558,8 +558,12 @@ class Resource(template_objects.CodeObject):
       if parent._def_dict.has_key('parentResourceChain'):
         self.SetTemplateValue('parentResourceChain', parent._def_dict['parentResourceChain']
                               + parent._def_dict['className']+".")
+        self.SetTemplateValue('parentResourceChainLower', parent._def_dict['parentResourceChainLower']
+                              + parent._def_dict['wireName']+".")
       else:
         self.SetTemplateValue('parentResourceChain', parent._def_dict['className']+".")
+        self.SetTemplateValue('parentResourceChainLower', parent._def_dict['wireName']+".")
+
     if parent != None and parent != api:
       if parent._def_dict.has_key('parentResourceResourceChain'):
         self.SetTemplateValue('parentResourceResourceChain',
@@ -797,7 +801,6 @@ class Method(template_objects.CodeObject):
             finalReturnValue = rProp['items']['$ref']
             print ("looks like the final type should actually be " + finalReturnValue)
             self.SetTemplateValue('finalReturnType', finalReturnValue)'''
-
 
   def _SetUploadTemplateValues(self, upload_protocol, protocol_dict):
     """Sets upload specific template values.
