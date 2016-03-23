@@ -3,6 +3,14 @@
 
 public class {{ resource.className }}
 {{% indent %}
+{% if resource.resources|length > 0 %}{% noblank %}
+{% for subr in resource.resources %}{% eol %}public {{ subr.className }} {{ subr.codeName }}{ get; set; }{% endfor %}
+{% endnoblank %}
+
+public {{ resource.className }}() //public Reports()
+{{% indent %}
+{% for subr in resource.resources %}{% eol %}{{ subr.codeName }} = new {{ subr.className }}();{% endfor %}
+{% endindent %}}{% endif %}
 {% for subr in resource.resources %}{% call_template _gshell_cmdlet_wrappedMethods resource=subr %}{% endfor %}
 {% for method in resource.methods %}
 {% if method.isPageable %}

@@ -26,12 +26,18 @@ protected static g{{api.className }} mainBase { get; set; }
 {% for resource in api.resources %}{% eol %}public {{ resource.className }} {{ resource.codeName }} { get; set; }{% endfor %}
 {% endnoblank %}
 
-protected override string apiNameAndVersion { get { return mainBase.apiNameAndVersion; } }
+protected override string apiNameAndVersion { get { return mainBase.apiNameAndVersion; } }{% if api.isGdata %}
+
+HashSet<string> Scopes = new HashSet<string> {
+{% indent %}{% for authscope in api.authscopes %}{% literal authscope.value %},
+{% endfor %}{% endindent %}};
+{% endif %}
 #endregion
 
 #region Constructors
 public {{ api.className }}Base()
 {{% indent %}
+mainBase = new g{{api.className }}();
 {% for resource in api.resources %}{% eol %}{{ resource.codeName }} = new {{ resource.className }}();{% endfor %}
 {% endindent %}}
 #endregion
@@ -42,7 +48,7 @@ protected override void BeginProcessing()
     var secrets = CheckForClientSecrets();
     if (secrets != null)
     {
-        IEnumerable<string> scopes = EnsureScopesExist(Domain);
+        IEnumerable<string> scopes = EnsureScopesExist(Domain{% if api.isGdata %}, Scopes{% endif %});
         Domain = mainBase.BuildService(Authenticate(scopes, secrets, Domain)).domain;
 
         GWriteProgress = new gWriteProgress(WriteProgress);
@@ -92,7 +98,7 @@ protected override bool worksWithGmail { get { return {% if api.name = "admin" %
 
 protected override {{ api.versionNoDots }}.{{ api.className }}Service CreateNewService(string domain)
 {
-    return new {{ api.versionNoDots }}.{{ api.className }}Service(OAuth2Base.GetInitializer(domain));
+    return new {{ api.versionNoDots }}.{{ api.className }}Service(OAuth2Base.Get{% if api.isGdata %}Gdata{% endif %}Initializer(domain));
 }
 
 public override string apiNameAndVersion { get { return "{{ api.name }}:{{ api.versionNoDots }}"; } }
