@@ -74,11 +74,11 @@ public List<{{ api.module.name }}.Data.{{ method.finalReturnType }}> {{ method.c
 }
 {% else %}{# NOT PAGEABLE #}
 {% noeol %}{% noblank %}
-public{% sp %}{% if method.finalReturnType %}{{ api.module.name }}.Data.{{ method.finalReturnType }}
-{% else %}void{% endif %}{% sp %}
+public{% sp %}{% if method.supportsMediaUpload %}void{% else %}{% if method.finalReturnType %}{{ api.module.name }}.Data.{{ method.finalReturnType }}
+{% else %}void{% endif %}{% endif %}{% sp %}
 {{ method.className }}
 {% eol %}({% call_template _gshell_dotnet_methodparams method=method showCustomProperties=True %}){% eol %}
 {{% eol %}
-    {% indent %}{% if method.finalReturnType %}return {% endif %}GetService().{{ resource.parentResourceChain }}{{ resource.className }}.{{ method.className}}({% call_template _gshell_dotnet_methodparams method=method hideTypes=True %}).Execute();{% endindent %}{% eol %}
+    {% indent %}{% if not method.supportsMediaUpload %}{% if method.finalReturnType %}return {% endif %}{% endif %}GetService().{{ resource.parentResourceChain }}{{ resource.className }}.{{ method.className}}({% call_template _gshell_dotnet_methodparams method=method hideTypes=True %}){% if method.supportsMediaUpload %}.Upload(){% else %}.Execute(){% endif %};{% endindent %}{% eol %}
 }{% eol %}{% endnoblank %}{% endnoeol %}
 {% endif %}{% endindent %}

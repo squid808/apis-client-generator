@@ -208,6 +208,7 @@ class Api(template_objects.CodeObject):
     self._model_module = template_objects.Module(package_path=None,
                                                  parent=self._module)
 
+
   def _BuildResourceDefinitions(self):
     """Loop over the resources in the discovery doc and build definitions."""
     self._resources = []
@@ -757,6 +758,8 @@ class Method(template_objects.CodeObject):
     self._InitMediaUpload(parent)
     self._InitPageable(api)
     self._InitFinalReturnType(api)
+    self._InitRequestParams(api)
+    self._InitPropertiesCounters(api)
     api.AddMethod(self)
 
   def _InitMediaUpload(self, parent):
@@ -794,13 +797,48 @@ class Method(template_objects.CodeObject):
     if (response_type != api.void_type):
       #print("for " + self._def_dict['id'] + " the first return type is " + self._def_dict['response']['$ref'])
       self.SetTemplateValue('finalReturnType', self._def_dict['response']['$ref'])
-      response_params = response_type['properties']
-      '''for rProp in response_params:
+      '''response_params = response_type['properties']
+      for rProp in response_params:
         if (rProp._def_dict['wireName'] == 'items'
           and '$ref' in rProp['items']):
             finalReturnValue = rProp['items']['$ref']
             print ("looks like the final type should actually be " + finalReturnValue)
             self.SetTemplateValue('finalReturnType', finalReturnValue)'''
+
+  def _InitRequestParams(self, api):
+    #self.SetTemplateValue('request_parameters', self.values.get('requestType'))
+    request = self.values.get('requestType')
+    if (request != None):
+      self.SetTemplateValue('request_parameters', request._def_dict['properties'])
+    else:
+      self.SetTemplateValue('request_parameters', None)
+
+  #CUSTOM
+  '''@property
+  def request_parameters(self):
+    request = self.values.get('requestType')
+    if (request != None):
+      return [p for p in request._def_dict['properties']]
+    else:
+      return None'''
+
+  #CUSTOM
+  def _InitPropertiesCounters(self, api):
+    '''Assign an incrementing value for each property, for purposes of CmdletPropertyPositions'''
+    i = 0
+    for p in self.values['parameters']:
+      if p.required:
+        p.SetTemplateValue('paramPosition', i)
+        i += 1
+    for p in self.values['parameters']:
+      if not p.required:
+        p.SetTemplateValue('paramPosition', i)
+        i += 1
+    if (self.values['request_parameters'] != None):
+      for p in self.values['request_parameters']:
+        p.SetTemplateValue('paramPosition', i)
+        i += 1
+
 
   def _SetUploadTemplateValues(self, upload_protocol, protocol_dict):
     """Sets upload specific template values.

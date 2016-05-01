@@ -96,9 +96,9 @@ public class {{ api.className }} : ServiceWrapper<{{ api.versionNoDots }}.{{ api
 
 protected override bool worksWithGmail { get { return {% if api.name = "admin" %}false{% else %}true{% endif %}; } }
 
-protected override {{ api.versionNoDots }}.{{ api.className }}Service CreateNewService(string domain)
+protected override {{ api.versionNoDots }}.{{ api.className }}Service CreateNewService(string domain, AuthenticatedUserInfo authInfo)
 {
-    return new {{ api.versionNoDots }}.{{ api.className }}Service(OAuth2Base.Get{% if api.isGdata %}Gdata{% endif %}Initializer(domain));
+    return new {{ api.versionNoDots }}.{{ api.className }}Service(OAuth2Base.Get{% if api.isGdata %}Gdata{% endif %}Initializer(domain, authInfo));
 }
 
 public override string apiNameAndVersion { get { return "{{ api.name }}:{{ api.versionNoDots }}"; } }

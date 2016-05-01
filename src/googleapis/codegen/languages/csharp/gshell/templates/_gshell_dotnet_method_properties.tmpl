@@ -39,5 +39,7 @@ Google.Apis.Util.Repeatable<string>
     public int totalResults = 0;{% eol %}
 {% endif %}
 }{% eol %}{% eol %}
-{% endif %}{% endfor %}
+{% endif %}
+{% if method.supportsMediaDownload %}{% endif %}
+{% endfor %}
 {% endnoblank %}{% endnoeol %}{% endindent %}

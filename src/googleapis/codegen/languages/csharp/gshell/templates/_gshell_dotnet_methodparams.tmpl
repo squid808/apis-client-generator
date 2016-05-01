@@ -9,31 +9,64 @@ hideTypes: hide the type of the parameter. Used when being called from anything 
 showCustomProperties: show the custom properties for gShell. Useful when declaring a method signature.
 fullNamespace: put the full namespace in front of the optional parameters, for use in the cmdlets files
 
-{% endcomment %}
-{% parameter_list %}
-
-{% if method.requestType %}
+{% endcomment %}{% parameter_list %}{% if not method.supportsMediaUpload %} {# mediaUpload #}
+{% if method.requestType %}  {# requestType #}
     {% parameter %}
 {% if not hideTypes %}{{ method.requestType.fullClassName }}{% endif %} body
     {% end_parameter %}
-{% endif %}
-{% if method.requiredParameters|length > 0 %}
+{% endif %} {# end requestType #}
+{% if method.requiredParameters|length > 0 %} {# method.requiredParams #}
 {% for p in method.requiredParameters %}
     {% parameter %}
-        {% if not hideTypes %}{% if p.enumType %}
+        {% if not hideTypes %}{% if p.enumType %} {# hideTypes #}{# p.enumType #}
 {{ api.versionNoDots }}.{% if resource.parentResourceResourceChain %}{{ resource.parentResourceResourceChain }}{% endif %}{{ resource.className }}Resource.{{ method.className }}Request.{% camel_case p.enumType.className %}Enum
         {% elif p.repeated %}
 Google.Apis.Util.Repeatable<string>
         {% else %}
 {{ p.requiredType }}
-        {% endif %}
- {% endif %}{{ p.codeName }}
+        {% endif %} {# end enumType #}
+ {% endif %}{{ p.codeName }} {# end hideTypes #}
     {% end_parameter %}
 {% endfor %}
-{% endif %}
-{% if method.optionalParameters|length > 0 %}
-{% if showCustomProperties %}
+{% endif %}  {# end method.requiredParams #}
+{% if method.optionalParameters|length > 0 %} {# method.optionalParameters #}
+{% if showCustomProperties %} {# showCustom #}
 {% parameter %}
 {% if not hideTypes %}{% if fullNamespace %}g{{ api.className }}.{{ resource.parentResourceChain }}{{ resource.className }}.{% endif %}{{ resource.className }}{{ method.className }}Properties {% endif %}properties{% if not hideTypes %} = null{% endif %}
 {% end_parameter %}
-{% endif %}{% endif %}{% end_parameter_list %}
+{% endif %}{% endif %}{% else %} {# end showCustom #} {# end optionalParams #}{# else supports MediaUpload #}
+
+
+{% if method.requestType %} {# requestType #}
+{% parameter %}
+{% if not hideTypes %}{{ method.requestType.fullClassName }} {% endif %}body
+{% end_parameter %}
+{% endif %} {# end requestType #}
+
+{% for p in method.requiredParameters %}
+  {% parameter %}
+ {% if not hideTypes %}{% if p.enumType %} {# not hideTypes #}{# enumType #}
+{{ method.className }}MediaUpload.{% camel_case p.enumType.className %}Enum
+ {% elif p.repeated %}
+Google.Apis.Util.Repeatable<string>
+ {% else %}
+{{ p.requiredType }}
+ {% endif %}{% endif %}{{ p.codeName }} {# end enumType #}{# end hideTypes #}
+  {% end_parameter %}
+{% endfor %}
+{% parameter %}
+{% if not hideTypes %}System.IO.Stream {% endif %}stream
+{% end_parameter %}
+
+{% parameter %}
+{% if not hideTypes %}string {% endif %}contentType
+{% end_parameter %}
+
+{% if method.optionalParameters|length > 0 %} {# method.optionalParameters #}
+{% if showCustomProperties %} {# showCustom #}
+{% parameter %}
+{% if not hideTypes %}{% if fullNamespace %}g{{ api.className }}.{{ resource.parentResourceChain }}{{ resource.className }}.{% endif %}{{ resource.className }}{{ method.className }}Properties {% endif %}properties{% if not hideTypes %} = null{% endif %}
+{% end_parameter %}
+{% endif %}{% endif %}
+
+{% endif %}{% end_parameter_list %} {# end not mediaUpload #}
