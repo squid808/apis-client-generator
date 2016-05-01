@@ -43,6 +43,7 @@ Google.Apis.Util.Repeatable<string>
 {% end_parameter %}
 {% endif %} {# end requestType #}
 
+{% if method.requiredParameters|length > 0 %}
 {% for p in method.requiredParameters %}
   {% parameter %}
  {% if not hideTypes %}{% if p.enumType %} {# not hideTypes #}{# enumType #}
@@ -53,7 +54,7 @@ Google.Apis.Util.Repeatable<string>
 {{ p.requiredType }}
  {% endif %}{% endif %}{{ p.codeName }} {# end enumType #}{# end hideTypes #}
   {% end_parameter %}
-{% endfor %}
+{% endfor %}{% endif %}
 {% parameter %}
 {% if not hideTypes %}System.IO.Stream {% endif %}stream
 {% end_parameter %}
@@ -67,6 +68,6 @@ Google.Apis.Util.Repeatable<string>
 {% parameter %}
 {% if not hideTypes %}{% if fullNamespace %}g{{ api.className }}.{{ resource.parentResourceChain }}{{ resource.className }}.{% endif %}{{ resource.className }}{{ method.className }}Properties {% endif %}properties{% if not hideTypes %} = null{% endif %}
 {% end_parameter %}
-{% endif %}{% endif %}
+{% endif %}{% endif %}{# end showCustom #} {# end optionalParams #}
 
 {% endif %}{% end_parameter_list %} {# end not mediaUpload #}
