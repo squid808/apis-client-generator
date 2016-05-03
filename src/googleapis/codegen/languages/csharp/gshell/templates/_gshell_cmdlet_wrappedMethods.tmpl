@@ -29,7 +29,7 @@ public {% if method.supportsMediaUpload %}void{% else %}{% if method.finalReturn
 {% if method.optionalParameters|length > 0 %}
 properties = (properties != null) ? properties : new g{{ api.className }}.{{ resource.parentResourceChain }}{{ resource.className }}.{{ resource.className }}{{ method.className }}Properties();
 {% endif %}
-{% if not method.supportsMediaUpload %}{% if method.finalReturnType %}return {% endif %}{% endif %}mainBase.{{ resource.parentResourceChainLower }}{{ resource.codeName }}.{{ method.className }}({% call_template _gshell_dotnet_methodparams method=method showCustomProperties=True hideTypes=True %});
+{% if not method.supportsMediaUpload %}{% if method.finalReturnType %}return {% endif %}{% endif %}mainBase.{{ resource.parentResourceChainLower }}{{ resource.codeName }}.{{ method.className }}({% call_template _gshell_dotnet_methodparams method=method showCustomProperties=True hideTypes=True includeSvcAcctInCall=True %});
 {% endindent %}}
 {% endif %}{% endfor %}{% endindent %}}
 

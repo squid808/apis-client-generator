@@ -8,8 +8,10 @@ Template Parameters:
 hideTypes: hide the type of the parameter. Used when being called from anything other than a signature
 showCustomProperties: show the custom properties for gShell. Useful when declaring a method signature.
 fullNamespace: put the full namespace in front of the optional parameters, for use in the cmdlets files
+includeSvcAcctParam:
+includeSvcAcctInCall:
 
-{% endcomment %}{% parameter_list %}{% if not method.supportsMediaUpload %} {# mediaUpload #}
+{% endcomment %}{% parameter_list %}{% if not method.supportsMediaUpload %} {# not mediaUpload #}
 {% if method.requestType %}  {# requestType #}
     {% parameter %}
 {% if not hideTypes %}{{ method.requestType.fullClassName }}{% endif %} body
@@ -70,4 +72,6 @@ Google.Apis.Util.Repeatable<string>
 {% end_parameter %}
 {% endif %}{% endif %}{# end showCustom #} {# end optionalParams #}
 
-{% endif %}{% end_parameter_list %} {# end not mediaUpload #}
+{% endif %}
+{% if includeSvcAcctInCall %}{% parameter %}{% if not hideTypes %}string {% endif %}gShellServiceAccount{% if not hideTypes %} = null{% endif %}{% end_parameter %}{% endif %}
+{% end_parameter_list %} {# end not mediaUpload #}

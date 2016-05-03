@@ -13,13 +13,13 @@ like a Function<> for a progress bar, and a totalResults.
 {% if method.isPageable %}
 {% noeol %}{% noblank %}
 public List<{{ api.module.name }}.Data.{{ method.finalReturnType }}> {{ method.className }}(
-    {% eol %}{% indent %}{% call_template _gshell_dotnet_methodparams method=method showCustomProperties=True %}){% endindent %}
+    {% eol %}{% indent %}{% call_template _gshell_dotnet_methodparams method=method showCustomProperties=True includeSvcAcctInCall=True%}){% endindent %}
 {% endnoblank %}{% endnoeol %}
 {
     var results = new List<{{ api.module.name }}.Data.{{ method.finalReturnType }}>();
 
     {% noeol %}{% noblank %}
-    {{ api.versionNoDots }}.{% if resource.parentResourceResourceChain %}{{ resource.parentResourceResourceChain }}{% endif %}{{ resource.className }}Resource.{{ method.className }}Request request = GetService().
+    {{ api.versionNoDots }}.{% if resource.parentResourceResourceChain %}{{ resource.parentResourceResourceChain }}{% endif %}{{ resource.className }}Resource.{{ method.className }}Request request = GetService(gShellServiceAccount).
     {{ resource.parentResourceChain }}{{ resource.className }}.{{ method.className }}(
     {% indent %}{% indent %}{% eol %}{% call_template _gshell_dotnet_methodparams method=method hideTypes=True %});{% endindent %}{% endindent %}
     {% endnoblank %}{% endnoeol %}
@@ -77,8 +77,8 @@ public List<{{ api.module.name }}.Data.{{ method.finalReturnType }}> {{ method.c
 public{% sp %}{% if method.supportsMediaUpload %}void{% else %}{% if method.finalReturnType %}{{ api.module.name }}.Data.{{ method.finalReturnType }}
 {% else %}void{% endif %}{% endif %}{% sp %}
 {{ method.className }}
-{% eol %}({% call_template _gshell_dotnet_methodparams method=method showCustomProperties=True %}){% eol %}
+{% eol %}({% call_template _gshell_dotnet_methodparams method=method showCustomProperties=True includeSvcAcctInCall=True %}){% eol %}
 {{% eol %}
-    {% indent %}{% if not method.supportsMediaUpload %}{% if method.finalReturnType %}return {% endif %}{% endif %}GetService().{{ resource.parentResourceChain }}{{ resource.className }}.{{ method.className}}({% call_template _gshell_dotnet_methodparams method=method hideTypes=True %}){% if method.supportsMediaUpload %}.Upload(){% else %}.Execute(){% endif %};{% endindent %}{% eol %}
+    {% indent %}{% if not method.supportsMediaUpload %}{% if method.finalReturnType %}return {% endif %}{% endif %}GetService(gShellServiceAccount).{{ resource.parentResourceChain }}{{ resource.className }}.{{ method.className}}({% call_template _gshell_dotnet_methodparams method=method hideTypes=True %}){% if method.supportsMediaUpload %}.Upload(){% else %}.Execute(){% endif %};{% endindent %}{% eol %}
 }{% eol %}{% endnoblank %}{% endnoeol %}
 {% endif %}{% endindent %}
