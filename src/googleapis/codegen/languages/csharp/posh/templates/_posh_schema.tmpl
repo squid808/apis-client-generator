@@ -1,0 +1,23 @@
+
+
+    [Cmdlet(VerbsCommon.New, "G{{ api.className }}{{ schema.className }}Obj",
+    SupportsShouldProcess = true)]
+    public class NewG{{ api.className }}{{ schema.className }}Obj : PSCmdlet
+    {
+        #region Properties{% indent %}{% indent %}
+        {% for parameter in schema.properties %}{% call_template _posh_params parameter=parameter %}{% endfor %}{% endindent %}{% endindent %}
+        #endregion
+
+         protected override void ProcessRecord()
+        {
+            var body = new {{ schema.className }}()
+            {{% for p in schema.properties %}
+                {{ p.memberName }} = this.{{ p.memberName }},{% endfor %}
+            };
+
+            if (ShouldProcess("{{ api.className }} {{ schema.className }}", "New-G{{ api.className }}{{ schema.className }}Obj"))
+            {
+                WriteObject(body);
+            }
+        }
+    }

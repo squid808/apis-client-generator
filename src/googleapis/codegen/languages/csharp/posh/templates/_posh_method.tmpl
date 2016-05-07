@@ -1,0 +1,41 @@
+
+[Cmdlet("{{ method.className }}", "G{{ api.className }}{{ resource.className }}",
+SupportsShouldProcess = true,
+  HelpUri = @"{{ api.documentationLink }}{{ api.version }}/reference/{{ resource.parentResourceChainUri }}{{ resource.codeName }}/{{ method.codeName }}")]
+public class {{ method.className }}G{{ api.className }}{{ resource.className }}Command : {{ api.className }}ServiceAccountBase
+{
+{% indent %}#region Properties
+{% for parameter in method.posh_parameters %}{% call_template _posh_params parameter=parameter %}{% endfor %}
+#endregion{% endindent %}
+
+    protected override void ProcessRecord()
+    {
+
+        if (ShouldProcess("{{ api.className }} {{ resource.className }}", "{{ method.className }}-G{{ api.className }}{{ resource.className }}"))
+        {{% if method.requestType %}
+
+            var body = new {{ method.requestType.className }}()
+            {
+                //DO THINGS HERE, PREVENT PAGE TOKEN FROM SHOWING IN POSH PARAMS
+                {% for p in method.request_parameters %}
+                //{{ p.memberName }}
+                {% endfor %}
+            };
+            {% endif %}{% if method.optionalParameters|length > 0 %}
+
+            var properties = new g{{ api.className }}.{{ resource.parentResourceChain }}{{ resource.className }}.{{ resource.className }}{{ method.className }}Properties()
+            {{% indent %}{% indent %}{% indent %}{% indent %}{% call_template _posh_set_custom_properties method=method %}{% endindent %}{% endindent %}{% endindent %}{% endindent %}
+            };
+            {% endif %}
+
+            {% noeol %}
+{% if method.finalReturnType %} WriteObject({% endif %}
+{{ resource.parentResourceChainLower }}{{ resource.codeName }}.{{ method.className }}(
+{% call_template _gshell_dotnet_methodparams method=method hideTypes=True showCustomProperties=True fullNamespace=True %}
+)
+{% if method.finalReturnType %}){% endif %}
+;{% endnoeol %}
+        }
+
+    }
+}

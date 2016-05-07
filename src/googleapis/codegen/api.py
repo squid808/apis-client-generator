@@ -171,6 +171,50 @@ class Api(template_objects.CodeObject):
         self._authscopes.append(AuthScope(self, value, auth_dict))
       self.SetTemplateValue('authscopes', self._authscopes)
 
+    self._Init_Posh_Req_Schemas()
+
+  def _Init_Posh_Req_Schemas(self):
+    self.SetTemplateValue('posh_schemas', [])
+    if self._resources != None:
+      for resource in self._resources:
+        self._Init_Posh_Req_Schemas_Resource(resource)
+    if self.values['posh_schemas'] != None:
+      for schema in self.values['posh_schemas']:
+        if schema.properties != None:
+          i = 0
+          for p in schema.properties:
+            p.SetTemplateValue('paramPosition', i)
+            i += 1
+
+  def _Init_Posh_Req_Schemas_Resource(self, resource):
+    if resource.methods != None:
+      for method in resource.methods:
+        if method.values['request_parameters'] != None:
+          for p in method.values['request_parameters']:
+            if p._data_type != None:
+              self._Init_Check_Posh_Property_Type(p)
+    if resource._resources != None:
+      for subresource in resource._resources:
+        self._Init_Posh_Req_Schemas_Resource(subresource)
+
+  def _Init_Check_Posh_Schema(self, schema):
+    if schema.properties != None:
+        for p in schema.properties:
+          self._Init_Check_Posh_Property_Type(p)
+
+  def _Init_Check_Posh_Property_Type(self, p):
+    if type(p._data_type) is data_types.SchemaReference:
+      s = self._schemas[p._data_type._referenced_schema_name]
+      if not s in self.values['posh_schemas']:
+        self.values['posh_schemas'].append(s)
+        self._Init_Check_Posh_Schema(s)
+    if type(p._data_type) is data_types.ArrayDataType:
+      if type(p._data_type._base_type) is data_types.SchemaReference:
+        s = p._data_type._base_type.referenced_schema
+        if not s in self.values['posh_schemas']:
+          self.values['posh_schemas'].append(s)
+          self._Init_Check_Posh_Schema(s)
+
   @property
   def all_schemas(self):
     """The dictionary of all the schema objects found in the API."""
@@ -554,6 +598,7 @@ class Resource(template_objects.CodeObject):
     self.ValidateName(name)
     class_name = api.ToClassName(name, self, element_type='resource')
     self.SetTemplateValue('className', class_name)
+
     #CUSTOM
     if parent != None and parent != api:
       if parent._def_dict.has_key('parentResourceChain'):
@@ -561,9 +606,12 @@ class Resource(template_objects.CodeObject):
                               + parent._def_dict['className']+".")
         self.SetTemplateValue('parentResourceChainLower', parent._def_dict['parentResourceChainLower']
                               + parent._def_dict['wireName']+".")
+        self.SetTemplateValue('parentResourceChainUri', parent._def_dict['parentResourceChainUri']
+                              + parent._def_dict['wireName']+"/")
       else:
         self.SetTemplateValue('parentResourceChain', parent._def_dict['className']+".")
         self.SetTemplateValue('parentResourceChainLower', parent._def_dict['wireName']+".")
+        self.SetTemplateValue('parentResourceChainUri', parent._def_dict['wireName']+"/")
 
     if parent != None and parent != api:
       if parent._def_dict.has_key('parentResourceResourceChain'):
@@ -759,7 +807,8 @@ class Method(template_objects.CodeObject):
     self._InitPageable(api)
     self._InitFinalReturnType(api)
     self._InitRequestParams(api)
-    self._InitPropertiesCounters(api)
+    #self._InitPropertiesCounters(api)
+    self._InitPoshParamList(api)
     api.AddMethod(self)
 
   def _InitMediaUpload(self, parent):
@@ -830,15 +879,45 @@ class Method(template_objects.CodeObject):
       if p.required:
         p.SetTemplateValue('paramPosition', i)
         i += 1
-    for p in self.values['parameters']:
-      if not p.required:
-        p.SetTemplateValue('paramPosition', i)
-        i += 1
     if (self.values['request_parameters'] != None):
       for p in self.values['request_parameters']:
         p.SetTemplateValue('paramPosition', i)
         i += 1
+    for p in self.values['parameters']:
+      if not p.required and p.codeName != 'pageToken':
+        p.SetTemplateValue('paramPosition', i)
+        i += 1
 
+  #CUSTOM
+  def _InitPoshParamList(self, api):
+    '''Create a logical list of parameters for a PowerShell Cmdlet'''
+    self.SetTemplateValue('posh_parameters', [])
+    params = self.values['posh_parameters']
+    i = 0
+    propNames = []
+
+    for p in self.values['parameters']:
+      if p.required:
+        p.SetTemplateValue('paramPosition', i)
+        i += 1
+        params.append(p)
+        propNames.append(p.codeName)
+    if (self.values['request_parameters'] != None):
+      v = self.values['request_parameters']
+      x = []
+      for p in self.values['request_parameters']:
+        x.append(p.codeName)
+      for p in self.values['request_parameters']:
+        p.SetTemplateValue('paramPosition', i)
+        i += 1
+        if (p.codeName in propNames):
+          p.SetTemplateValue('poshName', '' )
+        params.append(p)
+    for p in self.values['parameters']:
+      if not p.required and p.codeName != 'pageToken':
+        p.SetTemplateValue('paramPosition', i)
+        i += 1
+        params.append(p)
 
   def _SetUploadTemplateValues(self, upload_protocol, protocol_dict):
     """Sets upload specific template values.

@@ -73,12 +73,29 @@ public List<{{ api.module.name }}.Data.{{ method.finalReturnType }}> {{ method.c
     return results;
 }
 {% else %}{# NOT PAGEABLE #}
-{% noeol %}{% noblank %}
-public{% sp %}{% if method.supportsMediaUpload %}void{% else %}{% if method.finalReturnType %}{{ api.module.name }}.Data.{{ method.finalReturnType }}
-{% else %}void{% endif %}{% endif %}{% sp %}
-{{ method.className }}
-{% eol %}({% call_template _gshell_dotnet_methodparams method=method showCustomProperties=True includeSvcAcctInCall=True %}){% eol %}
-{{% eol %}
-    {% indent %}{% if not method.supportsMediaUpload %}{% if method.finalReturnType %}return {% endif %}{% endif %}GetService(gShellServiceAccount).{{ resource.parentResourceChain }}{{ resource.className }}.{{ method.className}}({% call_template _gshell_dotnet_methodparams method=method hideTypes=True %}){% if method.supportsMediaUpload %}.Upload(){% else %}.Execute(){% endif %};{% endindent %}{% eol %}
-}{% eol %}{% endnoblank %}{% endnoeol %}
+{% noeol %}
+public {% if method.finalReturnType %}{{ api.module.name }}.Data.{{ method.finalReturnType }}{% else %}void{% endif %}{% sp %}{{ method.className }} (
+{% call_template _gshell_dotnet_methodparams method=method showCustomProperties=True includeSvcAcctInCall=True %}
+)
+{% endnoeol %}
+{
+{% noeol %}{% indent %}
+{% if method.finalReturnType %}return {% endif %}GetService(gShellServiceAccount).{{ resource.parentResourceChain }}{{ resource.className }}.{{ method.className}}({% call_template _gshell_dotnet_methodparams method=method hideTypes=True %}).Execute();{% eol %}
+{% endindent %}
+}
+{% endnoeol %}
+
+{% if method.supportsMediaUpload %}{% noeol %}
+public void {{ method.className }} (
+{% call_template _gshell_dotnet_methodparams method=method showCustomProperties=True includeSvcAcctInCall=True supportMediaUpload=True %}
+)
+{% endnoeol %}
+{
+{% noeol %}{% indent %}
+GetService(gShellServiceAccount).{{ resource.parentResourceChain }}{{ resource.className }}.{{ method.className}}({% call_template _gshell_dotnet_methodparams method=method hideTypes=True supportMediaUpload=True %}).Upload();{% eol %}
+{% endindent %}
+}
+{% endnoeol %}
+{% endif %}
+
 {% endif %}{% endindent %}

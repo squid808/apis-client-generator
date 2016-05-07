@@ -1,0 +1,16 @@
+
+
+[Parameter(Position = {{parameter.paramPosition}},
+Mandatory = {% if parameter.required %}true{% else %}false{% endif %})]
+public{% noeol %}
+
+{% if parameter.enumType %}
+ {{ resource.parentResourceResourceChain }}{{ resource.className }}Resource.{{ method.className }}Request.{% camel_case parameter.memberName %}Enum?
+{% elif parameter.repeated %}
+string[]
+{% else %}
+{% if parameter.required %}
+ {{ parameter.requiredType }}
+{% else %}
+ {{ parameter.codeType }}
+{% endif %}{% endif %}{% endnoeol %} {{parameter.memberName}} { get; set; }

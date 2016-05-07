@@ -12,6 +12,7 @@ public {{ resource.className }}() //public Reports()
 {% for subr in resource.resources %}{% eol %}{{ subr.codeName }} = new {{ subr.className }}();{% endfor %}
 {% endindent %}}{% endif %}
 {% for subr in resource.resources %}{% call_template _gshell_cmdlet_wrappedMethods resource=subr %}{% endfor %}
+
 {% for method in resource.methods %}
 {% if method.isPageable %} {# is pageable #}
 public List<{{ api.module.name }}.Data.{{ method.finalReturnType }}> {{ method.className }}({% call_template _gshell_dotnet_methodparams method=method showCustomProperties=True fullNamespace=True %})
@@ -23,14 +24,23 @@ properties.updateProgressBar = UpdateProgressBar;{% endif %}
 {% endif %}
 return mainBase.{{ resource.parentResourceChainLower }}{{ resource.codeName }}.{{ method.className }}({% call_template _gshell_dotnet_methodparams method=method hideTypes=True %}{% if method.requiredParameters|length > 0 %}, {% endif %}{% if method.optionalParameters|length > 0 %}properties{% endif %});
 {% endindent %}}
-{% else %} {# not pageable #}
-public {% if method.supportsMediaUpload %}void{% else %}{% if method.finalReturnType %}{{ api.module.name }}.Data.{{ method.finalReturnType }}{% else %}void{% endif %}{% endif %} {{ method.className }} ({% call_template _gshell_dotnet_methodparams method=method showCustomProperties=True fullNamespace=True %})
+{% else %}
+{# not pageable #}
+public {% if method.finalReturnType %}{{ api.module.name }}.Data.{{ method.finalReturnType }}{% else %}void{% endif %} {{ method.className }} ({% call_template _gshell_dotnet_methodparams method=method showCustomProperties=True fullNamespace=True %})
 {{% indent %}
 {% if method.optionalParameters|length > 0 %}
 properties = (properties != null) ? properties : new g{{ api.className }}.{{ resource.parentResourceChain }}{{ resource.className }}.{{ resource.className }}{{ method.className }}Properties();
 {% endif %}
-{% if not method.supportsMediaUpload %}{% if method.finalReturnType %}return {% endif %}{% endif %}mainBase.{{ resource.parentResourceChainLower }}{{ resource.codeName }}.{{ method.className }}({% call_template _gshell_dotnet_methodparams method=method showCustomProperties=True hideTypes=True includeSvcAcctInCall=True %});
+{% if method.finalReturnType %}return {% endif %}mainBase.{{ resource.parentResourceChainLower }}{{ resource.codeName }}.{{ method.className }}({% call_template _gshell_dotnet_methodparams method=method showCustomProperties=True hideTypes=True includeSvcAcctInCall=True %});
 {% endindent %}}
-{% endif %}{% endfor %}{% endindent %}}
 
+{% if method.supportsMediaUpload %}
+public void {{ method.className }} ({% call_template _gshell_dotnet_methodparams method=method showCustomProperties=True fullNamespace=True supportMediaUpload=True %})
+{{% indent %}
+{% if method.optionalParameters|length > 0 %}
+properties = (properties != null) ? properties : new g{{ api.className }}.{{ resource.parentResourceChain }}{{ resource.className }}.{{ resource.className }}{{ method.className }}Properties();
+{% endif %}
+mainBase.{{ resource.parentResourceChainLower }}{{ resource.codeName }}.{{ method.className }}({% call_template _gshell_dotnet_methodparams method=method showCustomProperties=True hideTypes=True includeSvcAcctInCall=True supportMediaUpload=True %});
+{% endindent %}}{% endif %}
+{% endif %}{% endfor %}{% endindent %}}
 #endregion
