@@ -14,7 +14,7 @@ useCaps: whether or not to use capitals at the beginning of each parameter
 {% parameter_list %}
 {% if method.requestType %}
     {% parameter %}
-    {% if not hideTypes %}{{ method.requestType.fullClassName }} {% endif %}body
+    {% if not hideTypes %}{{ method.requestType.fullClassName }} {% endif %}{{ method.requestType.className }}Body
     {% end_parameter %}
 {% endif %}
 

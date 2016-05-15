@@ -1,17 +1,13 @@
-{% comment %}
-
-
-{# THIS LOOP IS FOR ALL resources and methods FOR THIS API, E.G. LIST OR GET #}
-
-
-{% endcomment %}
+/// <summary>The {% literal resource.wireName %} collection of methods.</summary>
 public class {{ resource.className }}
-{
+{{% indent %}
 {% if resource.resources|length > 0 %}{% noblank %}
-{% for subr in resource.resources %}{% eol %}public {{ subr.className }} {{ subr.codeName }}{ get; set; }{% endfor %}
+{% for subr in resource.resources %}
+/// <summary>Gets or sets the {{ subr.codeName }} resource class.</summary>
+public {{ subr.className }} {{ subr.codeName }}{ get; set; }{% endfor %}
 {% endnoblank %}
 
-public {{ resource.className }}() //public Reports()
+public {{ resource.className }}()
 {{% indent %}
 {% for subr in resource.resources %}{% eol %}{{ subr.codeName }} = new {{ subr.className }}();{% endfor %}
 {% endindent %}}{% endif %}
@@ -19,4 +15,4 @@ public {{ resource.className }}() //public Reports()
 {% call_template _gshell_dotnet_method_properties resource=resource %}
 {% for method in resource.methods %}{% call_template _gshell_dotnet_resource_method method=method %}{% endfor %}
 {% for subr in resource.resources %}{% eol %}{% indent %}{% call_template _gshell_dotnet_resource resource=subr %}{% endindent %}{% eol %}{% endfor %}
-}
+{% endindent %}}

@@ -6,12 +6,26 @@ not. The paged methods are discerned by the presence of the pageToken parameter,
 method to allow us to easily see if this needs to be a paged method or not.
 
 Paged methods allow gShell to accept a parameter of 'properties' for any non-required parameters, and also custom params
-like a Function<> for a progress bar, and a totalResults.
+like a Function<> for a progress bar, and a TotalResults.
 
 
 {% endcomment %}{% indent %}
-{% if method.isPageable %}
-{% noeol %}{% noblank %}
+
+{% doc_comment_if method.description %}
+{% noblank %}
+{% filter block_comment %}
+{% if method.requestType %}/// <param name="{{ method.requestType.className }}Body">The body of the request.</param>{% eol %}{% endif %}
+{% endfilter %}
+{% filter block_comment %}
+{% for param in method.requiredParameters %}/// <param name="{% camel_case param.codeName %}">{{ param.description }}</param>{% eol %}{% endfor %}
+{% endfilter %}
+{% filter block_comment %}
+{% if method.optionalParameters|length > 0 %}/// <param name="properties">The optional properties for this method.</param>{% eol %}{% endif %}
+{% endfilter %}
+{% filter block_comment %}
+/// <param name="gShellServiceAccount">The optional email address the service account should impersonate.</param>{% eol %}
+{% endfilter %}
+{% endnoblank %}{% if method.isPageable %}{% noeol %}{% noblank %}
 public List<{{ api.module.name }}.Data.{{ method.finalReturnType }}> {{ method.className }}(
     {% eol %}{% indent %}{% call_template _gshell_dotnet_methodparams method=method showCustomProperties=True includeSvcAcctInCall=True%}){% endindent %}
 {% endnoblank %}{% endnoeol %}
@@ -29,14 +43,14 @@ public List<{{ api.module.name }}.Data.{{ method.finalReturnType }}> {{ method.c
 
         {% for p in method.optionalParameters %}
         {% if not p.codeName == "pageToken" %}
-        request.{% if p.enumType %}{% camel_case p.memberName %}{% else %}{{ p.memberName }}{% endif %} = properties.{{ p.codeName }};{% eol %}
+        request.{% if p.enumType %}{% camel_case p.codeName %}{% else %}{% camel_case p.codeName %}{% endif %} = properties.{% camel_case p.codeName %};{% eol %}
         {% endif %}{% endfor %}
         {% endnoblank %}{% endnoeol %}
     }{% endif %}
 
-    if (null != properties.startProgressBar)
+    if (null != properties.StartProgressBar)
     {
-        properties.startProgressBar("Gathering {{ resource.className }}",
+        properties.StartProgressBar("Gathering {{ resource.className }}",
             string.Format("-Collecting {{ resource.className }} 1 to {0}", {% if method.hasMaxResultsParameter %}request.MaxResults.ToString(){% else %}"unknown"{% endif %}));
     }
 
@@ -48,13 +62,13 @@ public List<{{ api.module.name }}.Data.{{ method.finalReturnType }}> {{ method.c
 
         while (!string.IsNullOrWhiteSpace(pagedResult.NextPageToken) &&
             pagedResult.NextPageToken != request.PageToken &&
-        (properties.totalResults == 0 || results.Count < properties.totalResults))
+        (properties.TotalResults == 0 || results.Count < properties.TotalResults))
         {
             request.PageToken = pagedResult.NextPageToken;
 
-            if (null != properties.updateProgressBar)
+            if (null != properties.UpdateProgressBar)
             {
-                properties.updateProgressBar(5, 10, "Gathering {{ resource.className }}",
+                properties.UpdateProgressBar(5, 10, "Gathering {{ resource.className }}",
                         string.Format("-Collecting {{ resource.className }} {0} to {1}",
                             (results.Count + 1).ToString(),
                             {% if method.hasMaxResultsParameter %}(results.Count + request.MaxResults).ToString(){% else %}"unknown"{% endif %}));
@@ -63,17 +77,17 @@ public List<{{ api.module.name }}.Data.{{ method.finalReturnType }}> {{ method.c
             results.Add(pagedResult);
         }
 
-        if (null != properties.updateProgressBar)
+        if (null != properties.UpdateProgressBar)
         {
-            properties.updateProgressBar(1, 2, "Gathering {{ resource.className }}",
+            properties.UpdateProgressBar(1, 2, "Gathering {{ resource.className }}",
                     string.Format("-Returning {0} results.", results.Count.ToString()));
         }
     }
 
     return results;
 }
-{% else %}{# NOT PAGEABLE #}
-{% noeol %}
+
+{% else %}{# NOT PAGEABLE #}{% noeol %}
 public {% if method.finalReturnType %}{{ api.module.name }}.Data.{{ method.finalReturnType }}{% else %}void{% endif %}{% sp %}{{ method.className }} (
 {% call_template _gshell_dotnet_methodparams method=method showCustomProperties=True includeSvcAcctInCall=True %}
 )
@@ -83,6 +97,7 @@ public {% if method.finalReturnType %}{{ api.module.name }}.Data.{{ method.final
 {% if method.finalReturnType %}return {% endif %}GetService(gShellServiceAccount).{{ resource.parentResourceChain }}{{ resource.className }}.{{ method.className}}({% call_template _gshell_dotnet_methodparams method=method hideTypes=True %}).Execute();{% eol %}
 {% endindent %}
 }
+{% eol %}
 {% endnoeol %}
 
 {% if method.supportsMediaUpload %}{% noeol %}

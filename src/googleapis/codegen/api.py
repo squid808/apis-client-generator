@@ -173,7 +173,9 @@ class Api(template_objects.CodeObject):
 
     self._Init_Posh_Req_Schemas()
 
+#Custom
   def _Init_Posh_Req_Schemas(self):
+    '''Build a list of all schemas that are referenced as parameters or reference types in the entire API'''
     self.SetTemplateValue('posh_schemas', [])
     if self._resources != None:
       for resource in self._resources:
@@ -186,7 +188,9 @@ class Api(template_objects.CodeObject):
             p.SetTemplateValue('paramPosition', i)
             i += 1
 
+  #Custom
   def _Init_Posh_Req_Schemas_Resource(self, resource):
+    '''Check a resource to see if it contains any methods whose parameters are a schema'''
     if resource.methods != None:
       for method in resource.methods:
         if method.values['request_parameters'] != None:
@@ -197,12 +201,16 @@ class Api(template_objects.CodeObject):
       for subresource in resource._resources:
         self._Init_Posh_Req_Schemas_Resource(subresource)
 
+  #Custom
   def _Init_Check_Posh_Schema(self, schema):
+    '''Check a schema to see if it has any subproperties that are schemas'''
     if schema.properties != None:
         for p in schema.properties:
           self._Init_Check_Posh_Property_Type(p)
 
+  #Custom
   def _Init_Check_Posh_Property_Type(self, p):
+    '''Check the provided property to see if it is a schema reference or if it is an array of a schema type'''
     if type(p._data_type) is data_types.SchemaReference:
       s = self._schemas[p._data_type._referenced_schema_name]
       if not s in self.values['posh_schemas']:
@@ -846,13 +854,6 @@ class Method(template_objects.CodeObject):
     if (response_type != api.void_type):
       #print("for " + self._def_dict['id'] + " the first return type is " + self._def_dict['response']['$ref'])
       self.SetTemplateValue('finalReturnType', self._def_dict['response']['$ref'])
-      '''response_params = response_type['properties']
-      for rProp in response_params:
-        if (rProp._def_dict['wireName'] == 'items'
-          and '$ref' in rProp['items']):
-            finalReturnValue = rProp['items']['$ref']
-            print ("looks like the final type should actually be " + finalReturnValue)
-            self.SetTemplateValue('finalReturnType', finalReturnValue)'''
 
   def _InitRequestParams(self, api):
     #self.SetTemplateValue('request_parameters', self.values.get('requestType'))
@@ -862,18 +863,9 @@ class Method(template_objects.CodeObject):
     else:
       self.SetTemplateValue('request_parameters', None)
 
-  #CUSTOM
-  '''@property
-  def request_parameters(self):
-    request = self.values.get('requestType')
-    if (request != None):
-      return [p for p in request._def_dict['properties']]
-    else:
-      return None'''
-
-  #CUSTOM
+  '''#CUSTOM
   def _InitPropertiesCounters(self, api):
-    '''Assign an incrementing value for each property, for purposes of CmdletPropertyPositions'''
+    ''''''Assign an incrementing value for each property, for purposes of CmdletPropertyPositions''''''
     i = 0
     for p in self.values['parameters']:
       if p.required:
@@ -883,10 +875,13 @@ class Method(template_objects.CodeObject):
       for p in self.values['request_parameters']:
         p.SetTemplateValue('paramPosition', i)
         i += 1
+    if 'requestType' in self.values and self.values['requestType'] != None:
+      self.values['requestType'].SetTemplateValue('paramPosition, i')
+      i += 1
     for p in self.values['parameters']:
       if not p.required and p.codeName != 'pageToken':
         p.SetTemplateValue('paramPosition', i)
-        i += 1
+        i += 1'''
 
   #CUSTOM
   def _InitPoshParamList(self, api):
@@ -894,7 +889,7 @@ class Method(template_objects.CodeObject):
     self.SetTemplateValue('posh_parameters', [])
     params = self.values['posh_parameters']
     i = 0
-    propNames = []
+    propNames = [] #used to id duplicates, just in case
 
     for p in self.values['parameters']:
       if p.required:
@@ -902,7 +897,7 @@ class Method(template_objects.CodeObject):
         i += 1
         params.append(p)
         propNames.append(p.codeName)
-    if (self.values['request_parameters'] != None):
+    '''if (self.values['request_parameters'] != None):
       v = self.values['request_parameters']
       x = []
       for p in self.values['request_parameters']:
@@ -912,7 +907,10 @@ class Method(template_objects.CodeObject):
         i += 1
         if (p.codeName in propNames):
           p.SetTemplateValue('poshName', '' )
-        params.append(p)
+        params.append(p)'''
+    if 'requestType' in self.values and self.values['requestType'] != None:
+      self.values['requestType'].SetTemplateValue('paramPosition', i)
+      i += 1
     for p in self.values['parameters']:
       if not p.required and p.codeName != 'pageToken':
         p.SetTemplateValue('paramPosition', i)

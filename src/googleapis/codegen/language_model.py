@@ -37,6 +37,7 @@ CAP_FIRST = 7  # Hello worLd
 # AtSignPolicy - policies for replacing '@' in names
 ATSIGN_STRIP = 0  # Strip @
 ATSIGN_BREAK = 1  # Treat @ as a word break
+ATSIGN_KEEP =  2
 
 
 class NamingPolicy(object):

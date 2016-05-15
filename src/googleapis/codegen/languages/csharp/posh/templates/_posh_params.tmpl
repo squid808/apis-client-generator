@@ -7,7 +7,7 @@ public{% noeol %}
 {% if parameter.enumType %}
  {{ resource.parentResourceResourceChain }}{{ resource.className }}Resource.{{ method.className }}Request.{% camel_case parameter.memberName %}Enum?
 {% elif parameter.repeated %}
-string[]
+ string[]
 {% else %}
 {% if parameter.required %}
  {{ parameter.requiredType }}

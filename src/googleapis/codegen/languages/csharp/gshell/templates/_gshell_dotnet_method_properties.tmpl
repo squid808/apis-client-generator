@@ -8,18 +8,21 @@ includePageToken: Include the page token variable
 {% endcomment %}
 {% indent %}{% noeol %}{% noblank %}
 {% for method in resource.methods %}{% if method.optionalParameters|length > 0 %}
-public class {{ resource.className }}{{ method.className }}Properties{% eol %}
+/// <summary>Optional parameters for the {{ resource.className }} {{ method.className }} method.</summary>{% eol %}
+public class {{ resource.className }}{{ method.className }}Properties{% eol %}{% eol %}
 {{% eol %}
 {% for p in method.optionalParameters %}{% indent %}
 
 {# FOR MAX RESULTS JUST SET IT TO A NON NULLABLE #}
 {% if p.codeName == "maxResults" %}
-public int {{ p.codeName }} = {% if p.maximum %}{{ p.maximum }}{% else %}{{ "0" }}{% endif %};
+/// <summary>{{ p.description }}</summary>{% eol%}
+public int {% camel_case p.codeName %} = {% if p.maximum %}{{ p.maximum }}{% else %}{{ "0" }}{% endif %};
 {# DO NOT INCLUDE PAGE TOKEN SINCE THIS IS HANDLED IN THE PAGED RESULTS CODE #}
 {% elif not p.codeName == "pageToken" %}{# TODO: THIS LEAVES A BLANK LINE INSTEAD #}
+/// <summary>{{ p.description }}</summary>{% eol%}
 public
 {% if p.enumType %}
-{{ api.versionNoDots }}.{% if resource.parentResourceResourceChain %}{{ resource.parentResourceResourceChain }}{% endif %}{{ resource.className }}Resource.{{ method.className }}Request.{% camel_case p.memberName %}Enum?
+{{ api.versionNoDots }}.{% if resource.parentResourceResourceChain %}{{ resource.parentResourceResourceChain }}{% endif %}{{ resource.className }}Resource.{% camel_case method.className %}Request.{% camel_case p.memberName %}Enum?
 {% elif p.repeated %}
 Google.Apis.Util.Repeatable<string>
 {% else %}
@@ -29,15 +32,20 @@ Google.Apis.Util.Repeatable<string>
  {{ p.codeType }}
       {% endif %}
 {% endif %}
- {{ p.codeName }} = null; //test
+ {% camel_case p.codeName %} = null;
 {% endif %}
-{% endindent %}{% eol %}{% endfor %}
+{% endindent %}{% eol %}{% eol %}{% endfor %}
 
 {# INCLUDE CUSTOM PARAMS IF THIS IS A PAGED RESULT #}
 {% if method.isPageable %}
-    public Action<string, string> startProgressBar = null;{% eol %}
-    public Action<int, int, string, string> updateProgressBar = null;{% eol %}
-    public int totalResults = 0;{% eol %}
+    /// <summary>A delegate that is used to start a progress bar.</summary>{% eol%}
+    public Action<string, string> StartProgressBar = null;{% eol %}{% eol %}
+
+    /// <summary>A delegate that is used to update a progress bar.</summary>{% eol%}
+    public Action<int, int, string, string> UpdateProgressBar = null;{% eol %}{% eol %}
+
+    /// <summary>A counter for the total number of results to pull when iterating through paged results.</summary>{% eol%}
+    public int TotalResults = 0;{% eol %}
 {% endif %}
 }{% eol %}{% eol %}
 {% endif %}
