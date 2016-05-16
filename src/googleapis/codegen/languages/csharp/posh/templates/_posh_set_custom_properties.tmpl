@@ -13,13 +13,13 @@ setToPoshValue:
 {% for p in method.optionalParameters %}
 {% parameter %}
     {% if p.codeName == "maxResults" %}{% if includeMaxResults %}{% eol %}
-{{ p.codeName }}{% endif %}
+{% camel_case p.codeName %}{% endif %}
 
     {% elif p.codeName == "pageToken" %}{% if includePageToken %}{% eol %}
-{{ p.codeName }}{% endif %}
+{% camel_case p.codeName %}{% endif %}
 
     {% else %}{% eol %}
-{{ p.codeName }} = this.{{ p.memberName }}
+{% camel_case p.codeName %} = this.{{ p.memberName }}
 
     {% endif %}
 {% end_parameter %}

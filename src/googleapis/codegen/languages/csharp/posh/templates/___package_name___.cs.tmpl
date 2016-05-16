@@ -1,12 +1,4 @@
-{% comment %}/*
-api.title = {{ api.title }}
-api.version = {{ api.version }}
-api.revision = {{ api.revision }}
-api.name = {{ api.name }}
-api.module.name = {{ api.module.name }}
-api.classname = {{ api.className }}
-*/
-{% endcomment %}using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,17 +11,22 @@ using g{{ api.className }} = gShell.dotNet.{{ api.className }};
 
 namespace gShell.Cmdlets.{{ api.className }}
 {
+    /// <summary>A base class which provides support for service account integration and schema objects.</summary>
     public abstract class {{ api.className }}ServiceAccountBase : {{ api.className }}Base
     {
         #region Properties
+
+        /// <summary>
+        /// <para type="description">The email account to be targeted by the service account.</para>
+        /// </summary>
         [Parameter(Mandatory = false)]
         [ValidateNotNullOrEmpty]
-        public string aTargetUserEmail { get; set; }
+        public string TargetUserEmail { get; set; }
         #endregion
 
         protected override void BeginProcessing()
         {
-            gShellServiceAccount = aTargetUserEmail;
+            gShellServiceAccount = TargetUserEmail;
 
             base.BeginProcessing();
         }
@@ -38,22 +35,4 @@ namespace gShell.Cmdlets.{{ api.className }}
     {% for schema in api.posh_schemas %}{% call_template _posh_schema schema=schema %}{% endfor %}
 }
 
-
-
-
-{% comment %}
-#region template
-{% for resource in api.resources %}
-//resource.codename = {{resource.codeName}}
-//parentChain = {{ resource.parentResourceChain }}
-{% for method in resource.methods %}
-    //method.codeName = {{method.codeName}}{% endfor %}
-{% for subr in resource.resources %}
-    //subr.codename = {{subr.codeName}}
-    //parentChain = {{ subr.parentResourceChain }}
-    {% for method in subr.methods %}
-        //method.codeName = {{method.codeName}}{% endfor %}
-{% endfor %}{% endfor %}
-#endregion
-{% endcomment %}
 {% for resource in api.resources %}{% call_template _posh_resource resource=resource %}{% endfor %}

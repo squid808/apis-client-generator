@@ -863,26 +863,6 @@ class Method(template_objects.CodeObject):
     else:
       self.SetTemplateValue('request_parameters', None)
 
-  '''#CUSTOM
-  def _InitPropertiesCounters(self, api):
-    ''''''Assign an incrementing value for each property, for purposes of CmdletPropertyPositions''''''
-    i = 0
-    for p in self.values['parameters']:
-      if p.required:
-        p.SetTemplateValue('paramPosition', i)
-        i += 1
-    if (self.values['request_parameters'] != None):
-      for p in self.values['request_parameters']:
-        p.SetTemplateValue('paramPosition', i)
-        i += 1
-    if 'requestType' in self.values and self.values['requestType'] != None:
-      self.values['requestType'].SetTemplateValue('paramPosition, i')
-      i += 1
-    for p in self.values['parameters']:
-      if not p.required and p.codeName != 'pageToken':
-        p.SetTemplateValue('paramPosition', i)
-        i += 1'''
-
   #CUSTOM
   def _InitPoshParamList(self, api):
     '''Create a logical list of parameters for a PowerShell Cmdlet'''
@@ -897,20 +877,10 @@ class Method(template_objects.CodeObject):
         i += 1
         params.append(p)
         propNames.append(p.codeName)
-    '''if (self.values['request_parameters'] != None):
-      v = self.values['request_parameters']
-      x = []
-      for p in self.values['request_parameters']:
-        x.append(p.codeName)
-      for p in self.values['request_parameters']:
-        p.SetTemplateValue('paramPosition', i)
-        i += 1
-        if (p.codeName in propNames):
-          p.SetTemplateValue('poshName', '' )
-        params.append(p)'''
     if 'requestType' in self.values and self.values['requestType'] != None:
       self.values['requestType'].SetTemplateValue('paramPosition', i)
       i += 1
+      params.append(self.values['requestType'])
     for p in self.values['parameters']:
       if not p.required and p.codeName != 'pageToken':
         p.SetTemplateValue('paramPosition', i)

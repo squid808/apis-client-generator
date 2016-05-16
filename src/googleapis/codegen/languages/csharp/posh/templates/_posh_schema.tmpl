@@ -1,7 +1,23 @@
 
 
+    /// <summary>
+    /// <para type="synopsis">Creates a new {{ api.className }} API {{ schema.className }} object.</para>
+    /// <para type="description">This provides a Cmdlet-Based approach to creating a {{ schema.className }} object which may be required as a parameter for some other Cmdlets in the {{ api.className }} API category.</para>
+    /// <para type="description">You could alternately create this object by calling New-Object -TypeName {{ api.module.name }}.Data.{{ schema.className}}</para>
+    /// <list type="alertSet"><item><term>About this Cmdlet</term><description>
+    /// Part of the gShell Project, relating to the Google {{ api.className }} API; see Related Links or use the -Online parameter.
+    /// </description></item></list>
+    /// <example>
+    ///   <code>PS C:\>New-G{{ api.className }}{{ schema.className }}Obj</code>
+    ///   <para>This automatically generated example serves to show the bare minimum required to call this Cmdlet.</para>
+    ///   <para>Additional examples may be added, viewed and edited by users on the community wiki at the URL found in the related links.</para>
+    /// </example>
+    /// <para type="link" uri="https://github.com/squid808/gShell/wiki/NewG{{ api.className }}{{ schema.className }}Obj">[Wiki page for this Cmdlet]</para>
+    /// <para type="link" uri="https://github.com/squid808/gShell/wiki/Getting-Started">[Getting started with gShell]</para>
+    /// </summary>
     [Cmdlet(VerbsCommon.New, "G{{ api.className }}{{ schema.className }}Obj",
     SupportsShouldProcess = true)]
+    [OutputType(typeof({{ schema.className }}))]
     public class NewG{{ api.className }}{{ schema.className }}Obj : PSCmdlet
     {
         #region Properties{% indent %}{% indent %}
@@ -15,7 +31,7 @@
                 {{ p.memberName }} = this.{{ p.memberName }},{% endfor %}
             };
 
-            if (ShouldProcess("{{ api.className }} {{ schema.className }}", "New-G{{ api.className }}{{ schema.className }}Obj"))
+            if (ShouldProcess("{{ schema.className }}"))
             {
                 WriteObject(body);
             }
