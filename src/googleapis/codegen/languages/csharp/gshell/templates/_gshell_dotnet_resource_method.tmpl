@@ -9,7 +9,7 @@ Paged methods allow gShell to accept a parameter of 'properties' for any non-req
 like a Function<> for a progress bar, and a TotalResults.
 
 
-{% endcomment %}{% indent %}
+{% endcomment %}
 
 {% doc_comment_if method.description %}
 {% noblank %}
@@ -35,7 +35,7 @@ public List<{{ api.module.name }}.Data.{{ method.finalReturnType }}> {{ method.c
     {% noeol %}{% noblank %}
     {{ api.versionNoDots }}.{% if resource.parentResourceResourceChain %}{{ resource.parentResourceResourceChain }}{% endif %}{{ resource.className }}Resource.{{ method.className }}Request request = GetService(gShellServiceAccount).
     {{ resource.parentResourceChain }}{{ resource.className }}.{{ method.className }}(
-    {% indent %}{% indent %}{% eol %}{% call_template _gshell_dotnet_methodparams method=method hideTypes=True %});{% endindent %}{% endindent %}
+    {% if method.parameters %}{% call_template _gshell_dotnet_methodparams method=method hideTypes=True %}{% endif %});
     {% endnoblank %}{% endnoeol %}
 
     {% if method.optionalParameters|length > 0 %}if (properties != null)
@@ -112,5 +112,4 @@ GetService(gShellServiceAccount).{{ resource.parentResourceChain }}{{ resource.c
 }
 {% endnoeol %}
 {% endif %}
-
-{% endif %}{% endindent %}
+{% endif %}

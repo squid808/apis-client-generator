@@ -177,51 +177,91 @@ class Api(template_objects.CodeObject):
   def _Init_Posh_Req_Schemas(self):
     '''Build a list of all schemas that are referenced as parameters or reference types in the entire API'''
     self.SetTemplateValue('posh_schemas', [])
-    if self._resources != None:
-      for resource in self._resources:
-        self._Init_Posh_Req_Schemas_Resource(resource)
+    if self._schemas != None:
+      for key, schema in self._schemas.iteritems():
+        '''Avoid any objects that just list other objects, no need for PoSh functions here. Commonly indicated with the next page tokens.'''
+        if not self._Is_Schema_Ref_List(schema):
+          if not schema in self.values['posh_schemas']:
+            self.values['posh_schemas'].append(schema)
+    # if self._schemas != None:
+    #   # for schema in self._schemas:
+    #   for key, schema in self._schemas.iteritems():
+    #     if not schema in self.values['posh_schemas']:
+    #       if schema.properties != None:
+    #         if (len(schema.properties) == 3 or len(schema.properties) == 4) and (('etag' in schema.properties and 'kind' in schema.properties) or ((x for x in schema.properties if x.codeName == 'kind') and (x for x in schema.properties if x.codeName == 'etag'))):
+    #           for p in schema.properties:
+    #             if p != 'etag' and p != 'kind' and p != 'nextPageToken' and p['type'] == 'array' and p.codeName != 'kind' and p.codeName != 'etag':
+    #               if not '$ref' in p['items'] or not '$ref' in p.values['items']:
+    #                 self.values['posh_schemas'].append(schema)
+    #         else:
+    #           self.values['posh_schemas'].append(schema)
+    # if self._resources != None:
+    #   for resource in self._resources:
+    #     self._Init_Posh_Req_Schemas_Resource(resource)
     if self.values['posh_schemas'] != None:
       for schema in self.values['posh_schemas']:
         if schema.properties != None:
           i = 0
           for p in schema.properties:
-            p.SetTemplateValue('paramPosition', i)
-            i += 1
+            '''Ignore attributes that are etag and kind, since we never need to set those in the cmdlets'''
+            if p != 'etag' and p != 'kind' and p.codeName != 'kind' and p.codeName != 'etag':
+              p.SetTemplateValue('paramPosition', i)
+              i += 1
 
   #Custom
-  def _Init_Posh_Req_Schemas_Resource(self, resource):
-    '''Check a resource to see if it contains any methods whose parameters are a schema'''
-    if resource.methods != None:
-      for method in resource.methods:
-        if method.values['request_parameters'] != None:
-          for p in method.values['request_parameters']:
-            if p._data_type != None:
-              self._Init_Check_Posh_Property_Type(p)
-    if resource._resources != None:
-      for subresource in resource._resources:
-        self._Init_Posh_Req_Schemas_Resource(subresource)
+  def _Is_Schema_Ref_List(self, schema):
+    '''Attempts to determine if a schema object is simply a collection of another ref object.'''
+    #Get a list of property names to check throughout
+    propNames = [x.codeName for x in schema.properties]
+    #If it contains a nextPageToken, it's almost guaranteed to be a result list
+    if 'nextPageToken' in propNames:
+      return True
+    if len(schema.properties) <= 4:
+      if 'kind' in propNames and 'etag' in propNames:
+        return True
+    return False
+
 
   #Custom
-  def _Init_Check_Posh_Schema(self, schema):
-    '''Check a schema to see if it has any subproperties that are schemas'''
-    if schema.properties != None:
-        for p in schema.properties:
-          self._Init_Check_Posh_Property_Type(p)
+  # def _Init_Posh_Req_Schemas_Resource(self, resource):
+  #   '''Check a resource to see if it contains any methods whose parameters are a schema'''
+  #   if resource.methods != None:
+  #     for method in resource.methods:
+  #       # if method.values['request_parameters'] != None:
+  #       #   for p in method.values['request_parameters']:
+  #       #     if p._data_type != None:
+  #       #       self._Init_Check_Posh_Property_Type(p)
+  #       if 'request' in method._def_dict:
+  #         schema = self._schemas[method._def_dict['request']['$ref']]
+  #         if not schema in self.values['posh_schemas']:
+  #           self.values['posh_schemas'].append(schema)
+  #         self._Init_Check_Posh_Schema(schema)
+  #   if resource._resources != None:
+  #     for subresource in resource._resources:
+  #       self._Init_Posh_Req_Schemas_Resource(subresource)
 
   #Custom
-  def _Init_Check_Posh_Property_Type(self, p):
-    '''Check the provided property to see if it is a schema reference or if it is an array of a schema type'''
-    if type(p._data_type) is data_types.SchemaReference:
-      s = self._schemas[p._data_type._referenced_schema_name]
-      if not s in self.values['posh_schemas']:
-        self.values['posh_schemas'].append(s)
-        self._Init_Check_Posh_Schema(s)
-    if type(p._data_type) is data_types.ArrayDataType:
-      if type(p._data_type._base_type) is data_types.SchemaReference:
-        s = p._data_type._base_type.referenced_schema
-        if not s in self.values['posh_schemas']:
-          self.values['posh_schemas'].append(s)
-          self._Init_Check_Posh_Schema(s)
+  # def _Init_Check_Posh_Schema(self, schema):
+  #   '''Check a schema to see if it has any subproperties that are schemas'''
+  #   if schema.properties != None:
+  #       for p in schema.properties:
+  #         compositeSchemaName = schema.CodeName + ''
+  #         self._Init_Check_Posh_Property_Type(p)
+
+  #Custom
+  # def _Init_Check_Posh_Property_Type(self, p):
+  #   '''Check the provided property to see if it is a schema reference or if it is an array of a schema type'''
+  #   if type(p._data_type) is data_types.SchemaReference:
+  #     s = self._schemas[p._data_type._referenced_schema_name]
+  #     if not s in self.values['posh_schemas']:
+  #       self.values['posh_schemas'].append(s)
+  #       self._Init_Check_Posh_Schema(s)
+  #   if type(p._data_type) is data_types.ArrayDataType:
+  #     if type(p._data_type._base_type) is data_types.SchemaReference:
+  #       s = p._data_type._base_type.referenced_schema
+  #       if not s in self.values['posh_schemas']:
+  #         self.values['posh_schemas'].append(s)
+  #         self._Init_Check_Posh_Schema(s)
 
   @property
   def all_schemas(self):
