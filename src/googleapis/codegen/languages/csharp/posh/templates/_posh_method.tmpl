@@ -13,11 +13,11 @@
 /// <para type="link" uri="https://github.com/squid808/gShell/wiki/{{ method.className }}G{{ api.className }}{{ resource.className }}">[Wiki page for this Cmdlet]</para>
 /// <para type="link" uri="https://github.com/squid808/gShell/wiki/Getting-Started">[Getting started with gShell]</para>
 /// </summary>
-[Cmdlet({% as_posh_verb method.className %}, "G{{ api.className }}{{ resource.className }}",
+[Cmdlet({% as_posh_verb method.className %}, "G{{ api.className }}{% nodots resource.className %}",
 SupportsShouldProcess = true,
 {#  HelpUri = @"{{ api.documentationLink }}{{ api.version }}/reference/{{ resource.parentResourceChainUri }}{{ resource.codeName }}/{{ method.codeName }}")] #}
-  HelpUri = @"{{ api.documentationLink }}{{ api.version }}/reference/{{ resource.parentResourceChainUri }}{{ resource.codeName }}/{{ method.codeName }}")]
-public class {{ method.className }}G{{ api.className }}{{ resource.className }}Command : {{ api.className }}ServiceAccountBase
+  HelpUri = @"{{ api.documentationLink }}{{ api.version }}/reference/{{ resource.parentResourceChainUri }}{% nodots resource.codeName %}/{{ method.codeName }}")]
+public class {{ method.className }}G{{ api.className }}{% nodots resource.className %}Command : {{ api.className }}ServiceAccountBase
 {
 {% indent %}#region Properties
 {% for parameter in method.posh_parameters %}{% call_template _posh_params parameter=parameter %}{% endfor %}

@@ -30,6 +30,7 @@ TODO(user): Refactor this so that the API can be loaded first, then annotated.
 
 __author__ = 'aiuto@google.com (Tony Aiuto)'
 
+import collections
 import json
 import logging
 import operator
@@ -179,47 +180,40 @@ class Api(template_objects.CodeObject):
     self.SetTemplateValue('posh_schemas', [])
     if self._schemas != None:
       for key, schema in self._schemas.iteritems():
-        '''Avoid any objects that just list other objects, no need for PoSh functions here. Commonly indicated with the next page tokens.'''
-        if not self._Is_Schema_Ref_List(schema):
+        #Avoid any objects that just list other objects, no need for PoSh functions here. Commonly indicated with the next page tokens.
+        if self._Should_Process_Schema_For_PoSh(schema):
           if not schema in self.values['posh_schemas']:
             self.values['posh_schemas'].append(schema)
-    # if self._schemas != None:
-    #   # for schema in self._schemas:
-    #   for key, schema in self._schemas.iteritems():
-    #     if not schema in self.values['posh_schemas']:
-    #       if schema.properties != None:
-    #         if (len(schema.properties) == 3 or len(schema.properties) == 4) and (('etag' in schema.properties and 'kind' in schema.properties) or ((x for x in schema.properties if x.codeName == 'kind') and (x for x in schema.properties if x.codeName == 'etag'))):
-    #           for p in schema.properties:
-    #             if p != 'etag' and p != 'kind' and p != 'nextPageToken' and p['type'] == 'array' and p.codeName != 'kind' and p.codeName != 'etag':
-    #               if not '$ref' in p['items'] or not '$ref' in p.values['items']:
-    #                 self.values['posh_schemas'].append(schema)
-    #         else:
-    #           self.values['posh_schemas'].append(schema)
-    # if self._resources != None:
-    #   for resource in self._resources:
-    #     self._Init_Posh_Req_Schemas_Resource(resource)
     if self.values['posh_schemas'] != None:
       for schema in self.values['posh_schemas']:
         if schema.properties != None:
+          schema.SetTemplateValue('posh_params', [])
           i = 0
-          for p in schema.properties:
-            '''Ignore attributes that are etag and kind, since we never need to set those in the cmdlets'''
-            if p != 'etag' and p != 'kind' and p.codeName != 'kind' and p.codeName != 'etag':
+          # Ignore attributes that are etag and kind, since we never need to set those in the cmdlets
+          for p in [p for p in schema.properties if p.codeName != 'etag' and p.codeName != 'kind']:
               p.SetTemplateValue('paramPosition', i)
+              schema.values['posh_params'].append(p)
               i += 1
 
   #Custom
-  def _Is_Schema_Ref_List(self, schema):
+  def _Should_Process_Schema_For_PoSh(self, schema):
     '''Attempts to determine if a schema object is simply a collection of another ref object.'''
     #Get a list of property names to check throughout
-    propNames = [x.codeName for x in schema.properties]
-    #If it contains a nextPageToken, it's almost guaranteed to be a result list
-    if 'nextPageToken' in propNames:
+    try:
+      propNames = [x.codeName for x in schema.properties]
+      #If it contains a nextPageToken, it's almost guaranteed to be a result list
+      if 'nextPageToken' in propNames:
+        return False
+      if len(schema.properties) <= 3 and 'kind' in propNames and 'etag' in propNames:
+        other = [x for x in schema.properties if (x.codeName != 'etag' and x.codeName != 'kind')][0]
+        #if the final property is a 'type' of array, contains itself a dictionary that has a $ref key
+        if other._def_dict['type'] == 'array' and (len([x for x in other._def_dict.values() if type(x) == collections.OrderedDict and x.has_key('$ref')]) > 0):
+          return False
+      #otherwise...
       return True
-    if len(schema.properties) <= 4:
-      if 'kind' in propNames and 'etag' in propNames:
-        return True
-    return False
+    except:
+      #there are no properties, so we don't want to process it at all!
+      return False
 
 
   #Custom

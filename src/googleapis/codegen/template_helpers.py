@@ -1712,26 +1712,64 @@ class PoshVerbUpdate(django_template.Node):
         pass
     text = ''.join(texts)
 
-    '''Return a string in double quotes if it's not in the dict.'''
+    #Return a string in double quotes if it's not in the dict.
     return self.poshVerbsDict.get(text, '"' + text + '"')
 
 
 @register.tag(name='as_posh_verb')
 def DoPoshVerbString(unused_parser, token):
-  """Emit a variable as a string literal, escaped for the current language.
-
-  A variable foo containing 'ab<newline>c' would be emitted as "ab\\nc"
-  (with no literal newline character). Multiple variables are concatenated.
+  """Attempts to replace the given word with a PoSh-compliant verb equivelent
 
   Usage:
-    {% literal somevar anothervar %}
+    {% as_posh_verb somevar %}
 
   Args:
     unused_parser: (parser) the Django parser context
     token: (django.template.Token) the token holding this tag and arguments
 
   Returns:
-    a LiteralStringNode
+    either the original string or the posh-compliant string
   """
   variables = token.split_contents()[1:]
   return PoshVerbUpdate(variables)
+
+#CUSTOM
+class PoshNoDots(django_template.Node):
+  """Django template Node holding a string to be written as a literal."""
+
+  def __init__(self, text):
+    """Construct the LiteralStringNode.
+
+    Args:
+      text: (list) the variable names containing the text being represented.
+    """
+    self._variables = text
+
+  def render(self, context):  # pylint: disable=g-bad-name
+    """Render the node."""
+    resolve = django_template.resolve_variable
+    texts = []
+    for v in self._variables:
+      try:
+        texts.append(resolve(v, context))
+      except django_template.base.VariableDoesNotExist:
+        pass
+    text = ''.join(texts)
+    return text.replace('.','')
+
+@register.tag(name='nodots')
+def DoPoshNoDots(unused_parser, token):
+  """Removes any dots from the string
+
+  Usage:
+    {% nodots somevar %}
+
+  Args:
+    unused_parser: (parser) the Django parser context
+    token: (django.template.Token) the token holding this tag and arguments
+
+  Returns:
+    A string with no dots
+  """
+  variables = token.split_contents()[1:]
+  return PoshNoDots(variables)

@@ -57,7 +57,7 @@ namespace gShell.Cmdlets.{{ api.className }}
         }
     }
 
-    {% for schema in api.schemas %}{% call_template _posh_schema schema=schema %}{% endfor %}
+    {% for schema in api.posh_schemas %}{% call_template _posh_schema schema=schema %}{% endfor %}
 }
 
 {% for resource in api.resources %}{% call_template _posh_resource resource=resource %}{% endfor %}
