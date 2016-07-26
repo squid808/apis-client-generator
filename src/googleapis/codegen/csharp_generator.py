@@ -47,6 +47,11 @@ class CSharpLanguageModel(language_model.LanguageModel):
       case_transform=language_model.UPPER_CAMEL_CASE, separator='.')
   member_policy = language_model.NamingPolicy(
       case_transform=language_model.UPPER_CAMEL_CASE)
+  #member_policy = language_model.NamingPolicy(
+  #    case_transform=language_model.UPPER_CAMEL_CASE,
+  #    conflict_policy = language_model.NamingPolicy(
+  #        format_string='@{name}',
+  #        atsign_policy=language_model.ATSIGN_KEEP))
 
   # TODO(user): Fix these 3 tables
   _SCHEMA_TYPE_TO_CSHARP_TYPE = {

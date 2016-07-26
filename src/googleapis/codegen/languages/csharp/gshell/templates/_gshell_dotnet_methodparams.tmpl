@@ -1,0 +1,85 @@
+{% comment %}
+The explicit method properties should be only the required parameter, and optional parameters should be brought in via
+a custom param object as templated in the resource file.
+
+Template Parameters:
+hideTypes: hide the type of the parameter. Used when being called from anything other than a signature
+showCustomProperties: show the custom properties (like UsersListProperties) for gShell. Useful when declaring a method signature.
+fullNamespace: put the full namespace in front of the optional parameters, for use in the cmdlets files
+includeSvcAcctInCall: whether or not to include the service account for gShell in the call
+supportMediaUpload: whether or not to include params for supporting media upload
+useCaps: whether or not to use capitals at the beginning of each parameter
+{% endcomment %}{% noeol %}
+
+{% parameter_list %}
+{% if method.requestType %}
+    {% parameter %}
+    {% if not hideTypes %}{{ method.requestType.fullClassName }} {% endif %}{{ method.requestType.className }}Body
+    {% end_parameter %}
+{% endif %}
+
+{% if method.requiredParameters|length > 0 %}
+    {% for p in method.requiredParameters %}
+        {% parameter %}
+
+        {% if not hideTypes %}
+            {% if p.enumType %}
+                {% if supportMediaUpload %}
+                    {{ method.className }}MediaUpload.{% camel_case p.enumType.className %}Enum
+                {% else %}{% noblank %}
+                    {{ api.versionNoDots }}.{{ resource.parentResourceResourceChain }}{{ resource.className }}Resource.{{ method.className }}Request.{% camel_case p.enumType.className %}Enum
+                {% endnoblank %}{% endif %}
+            {% elif p.repeated %}
+                Google.Apis.Util.Repeatable<string>
+            {% else %}
+                {{ p.requiredType }}
+            {% endif %}
+        {% endif %}
+
+        {% if supportMediaUpload %}
+ {{ p.codeName }}
+        {% else %}
+ {{ p.memberName }}
+        {% endif %}
+
+        {% end_parameter %}
+    {% endfor %}
+{% endif %}
+
+{% if supportMediaUpload %}
+    {% parameter %}
+    {% if not hideTypes %}System.IO.Stream {% endif %}stream
+    {% end_parameter %}
+
+    {% parameter %}
+    {% if not hideTypes %}string {% endif %}contentType
+    {% end_parameter %}
+{% endif %}
+
+{% if method.optionalParameters|length > 0 %}
+    {% if showCustomProperties %}
+
+    {% parameter %}
+    {% if not hideTypes %}
+        {% if fullNamespace %}
+g{{ api.className }}.{{ resource.parentResourceChain }}{{ resource.className }}.
+        {% endif %}
+{{ resource.className }}{{ method.className }}Properties{% sp %}
+    {% endif %}
+properties
+    {% if not hideTypes %}
+= null
+    {% endif %}
+    {% end_parameter %}
+
+    {% endif %}
+{% endif %}
+
+{% if includeSvcAcctInCall %}
+    {% parameter %}
+        {% if not hideTypes %}string {% endif %}gShellServiceAccount{% if not hideTypes %} = null{% endif %}
+    {% end_parameter %}
+{% endif %}
+
+{% end_parameter_list %}
+{% endnoeol %}

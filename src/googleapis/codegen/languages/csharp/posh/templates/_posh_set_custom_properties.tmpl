@@ -1,0 +1,28 @@
+{% comment %}
+
+
+subMaxForTotal:
+includeMaxResults: Include the max results variable
+includePageToken: Include the page token variable
+setInitialValue: give the type an initial value
+setToPoshValue:
+
+{% endcomment %}{% noeol %}{% parameter_list %}
+
+
+{% for p in method.optionalParameters %}
+{% parameter %}
+    {% if p.codeName == "maxResults" %}{% if includeMaxResults %}{% eol %}
+{% camel_case p.codeName %}{% endif %}
+
+    {% elif p.codeName == "pageToken" %}{% if includePageToken %}{% eol %}
+{% camel_case p.codeName %}{% endif %}
+
+    {% else %}{% eol %}
+{% camel_case p.codeName %} = this.{{ p.memberName }}
+
+    {% endif %}
+{% end_parameter %}
+
+{% endfor %}
+{% end_parameter_list %}{% endnoeol %}

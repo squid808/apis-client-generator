@@ -30,10 +30,13 @@ TODO(user): Refactor this so that the API can be loaded first, then annotated.
 
 __author__ = 'aiuto@google.com (Tony Aiuto)'
 
+import collections
 import json
 import logging
 import operator
 import urlparse
+
+from pprint import pprint
 
 
 from googleapis.codegen import data_types
@@ -169,6 +172,91 @@ class Api(template_objects.CodeObject):
         self._authscopes.append(AuthScope(self, value, auth_dict))
       self.SetTemplateValue('authscopes', self._authscopes)
 
+    self._Init_Posh_Req_Schemas()
+
+#Custom
+  def _Init_Posh_Req_Schemas(self):
+    '''Build a list of all schemas that are referenced as parameters or reference types in the entire API'''
+    self.SetTemplateValue('posh_schemas', [])
+    if self._schemas != None:
+      for key, schema in self._schemas.iteritems():
+        #Avoid any objects that just list other objects, no need for PoSh functions here. Commonly indicated with the next page tokens.
+        if self._Should_Process_Schema_For_PoSh(schema):
+          if not schema in self.values['posh_schemas']:
+            self.values['posh_schemas'].append(schema)
+    if self.values['posh_schemas'] != None:
+      for schema in self.values['posh_schemas']:
+        if schema.properties != None:
+          schema.SetTemplateValue('posh_params', [])
+          i = 0
+          # Ignore attributes that are etag and kind, since we never need to set those in the cmdlets
+          for p in [p for p in schema.properties if p.codeName != 'etag' and p.codeName != 'kind']:
+              p.SetTemplateValue('paramPosition', i)
+              schema.values['posh_params'].append(p)
+              i += 1
+
+  #Custom
+  def _Should_Process_Schema_For_PoSh(self, schema):
+    '''Attempts to determine if a schema object is simply a collection of another ref object.'''
+    #Get a list of property names to check throughout
+    try:
+      propNames = [x.codeName for x in schema.properties]
+      #If it contains a nextPageToken, it's almost guaranteed to be a result list
+      if 'nextPageToken' in propNames:
+        return False
+      if len(schema.properties) <= 3 and 'kind' in propNames and 'etag' in propNames:
+        other = [x for x in schema.properties if (x.codeName != 'etag' and x.codeName != 'kind')][0]
+        #if the final property is a 'type' of array, contains itself a dictionary that has a $ref key
+        if other._def_dict['type'] == 'array' and (len([x for x in other._def_dict.values() if type(x) == collections.OrderedDict and x.has_key('$ref')]) > 0):
+          return False
+      #otherwise...
+      return True
+    except:
+      #there are no properties, so we don't want to process it at all!
+      return False
+
+
+  #Custom
+  # def _Init_Posh_Req_Schemas_Resource(self, resource):
+  #   '''Check a resource to see if it contains any methods whose parameters are a schema'''
+  #   if resource.methods != None:
+  #     for method in resource.methods:
+  #       # if method.values['request_parameters'] != None:
+  #       #   for p in method.values['request_parameters']:
+  #       #     if p._data_type != None:
+  #       #       self._Init_Check_Posh_Property_Type(p)
+  #       if 'request' in method._def_dict:
+  #         schema = self._schemas[method._def_dict['request']['$ref']]
+  #         if not schema in self.values['posh_schemas']:
+  #           self.values['posh_schemas'].append(schema)
+  #         self._Init_Check_Posh_Schema(schema)
+  #   if resource._resources != None:
+  #     for subresource in resource._resources:
+  #       self._Init_Posh_Req_Schemas_Resource(subresource)
+
+  #Custom
+  # def _Init_Check_Posh_Schema(self, schema):
+  #   '''Check a schema to see if it has any subproperties that are schemas'''
+  #   if schema.properties != None:
+  #       for p in schema.properties:
+  #         compositeSchemaName = schema.CodeName + ''
+  #         self._Init_Check_Posh_Property_Type(p)
+
+  #Custom
+  # def _Init_Check_Posh_Property_Type(self, p):
+  #   '''Check the provided property to see if it is a schema reference or if it is an array of a schema type'''
+  #   if type(p._data_type) is data_types.SchemaReference:
+  #     s = self._schemas[p._data_type._referenced_schema_name]
+  #     if not s in self.values['posh_schemas']:
+  #       self.values['posh_schemas'].append(s)
+  #       self._Init_Check_Posh_Schema(s)
+  #   if type(p._data_type) is data_types.ArrayDataType:
+  #     if type(p._data_type._base_type) is data_types.SchemaReference:
+  #       s = p._data_type._base_type.referenced_schema
+  #       if not s in self.values['posh_schemas']:
+  #         self.values['posh_schemas'].append(s)
+  #         self._Init_Check_Posh_Schema(s)
+
   @property
   def all_schemas(self):
     """The dictionary of all the schema objects found in the API."""
@@ -205,6 +293,7 @@ class Api(template_objects.CodeObject):
     # The default module for data models defined by this API.
     self._model_module = template_objects.Module(package_path=None,
                                                  parent=self._module)
+
 
   def _BuildResourceDefinitions(self):
     """Loop over the resources in the discovery doc and build definitions."""
@@ -551,6 +640,28 @@ class Resource(template_objects.CodeObject):
     self.ValidateName(name)
     class_name = api.ToClassName(name, self, element_type='resource')
     self.SetTemplateValue('className', class_name)
+
+    #CUSTOM
+    if parent != None and parent != api:
+      if parent._def_dict.has_key('parentResourceChain'):
+        self.SetTemplateValue('parentResourceChain', parent._def_dict['parentResourceChain']
+                              + parent._def_dict['className']+".")
+        self.SetTemplateValue('parentResourceChainLower', parent._def_dict['parentResourceChainLower']
+                              + parent._def_dict['wireName']+".")
+        self.SetTemplateValue('parentResourceChainUri', parent._def_dict['parentResourceChainUri']
+                              + parent._def_dict['wireName']+"/")
+      else:
+        self.SetTemplateValue('parentResourceChain', parent._def_dict['className']+".")
+        self.SetTemplateValue('parentResourceChainLower', parent._def_dict['wireName']+".")
+        self.SetTemplateValue('parentResourceChainUri', parent._def_dict['wireName']+"/")
+
+    if parent != None and parent != api:
+      if parent._def_dict.has_key('parentResourceResourceChain'):
+        self.SetTemplateValue('parentResourceResourceChain',
+                              parent._def_dict['parentResourceResourceChain']
+                              + parent._def_dict['className']+"Resource.")
+      else:
+        self.SetTemplateValue('parentResourceResourceChain', parent._def_dict['className']+"Resource.")
     # Replace methods dict with Methods
     self._methods = []
     method_dict = self.values.get('methods') or {}
@@ -736,6 +847,10 @@ class Method(template_objects.CodeObject):
 
     self._InitMediaUpload(parent)
     self._InitPageable(api)
+    self._InitFinalReturnType(api)
+    self._InitRequestParams(api)
+    #self._InitPropertiesCounters(api)
+    self._InitPoshParamList(api)
     api.AddMethod(self)
 
   def _InitMediaUpload(self, parent):
@@ -765,6 +880,46 @@ class Method(template_objects.CodeObject):
         and self.FindCodeObjectWithWireName(
             self.optional_parameters, 'pageToken')):
       self.SetTemplateValue('isPageable', True)
+
+  #CUSTOM
+  def _InitFinalReturnType(self, api):
+    '''Determine what the final return type is - .Object or .Objects'''
+    response_type = self.values.get('responseType')
+    if (response_type != api.void_type):
+      #print("for " + self._def_dict['id'] + " the first return type is " + self._def_dict['response']['$ref'])
+      self.SetTemplateValue('finalReturnType', self._def_dict['response']['$ref'])
+
+  def _InitRequestParams(self, api):
+    #self.SetTemplateValue('request_parameters', self.values.get('requestType'))
+    request = self.values.get('requestType')
+    if (request != None):
+      self.SetTemplateValue('request_parameters', request._def_dict['properties'])
+    else:
+      self.SetTemplateValue('request_parameters', None)
+
+  #CUSTOM
+  def _InitPoshParamList(self, api):
+    '''Create a logical list of parameters for a PowerShell Cmdlet'''
+    self.SetTemplateValue('posh_parameters', [])
+    params = self.values['posh_parameters']
+    i = 0
+    propNames = [] #used to id duplicates, just in case
+
+    for p in self.values['parameters']:
+      if p.required:
+        p.SetTemplateValue('paramPosition', i)
+        i += 1
+        params.append(p)
+        propNames.append(p.codeName)
+    if 'requestType' in self.values and self.values['requestType'] != None:
+      self.values['requestType'].SetTemplateValue('paramPosition', i)
+      i += 1
+      params.append(self.values['requestType'])
+    for p in self.values['parameters']:
+      if not p.required and p.codeName != 'pageToken':
+        p.SetTemplateValue('paramPosition', i)
+        i += 1
+        params.append(p)
 
   def _SetUploadTemplateValues(self, upload_protocol, protocol_dict):
     """Sets upload specific template values.
@@ -836,6 +991,15 @@ class Method(template_objects.CodeObject):
 
   def queryParameters(self):  # pylint: disable=g-bad-name
     return self.query_parameters
+
+  #CUSTOM
+  @property
+  def hasMaxResultsParameter(self):
+    return any(x for x in self.values['parameters'] if x.codeName == "maxResults")
+    #for var in self.values['parameters']:
+      #pprint(var._def_dict)
+      #for property, value in vars(var).iteritems():
+        #print property, ": ", value
 
 
 class Parameter(template_objects.CodeObject):

@@ -1,0 +1,24 @@
+PS C:\>{{ method.className }}-G{{ api.className }}{{ resource.className }}{% noeol %}
+{% if method.requiredParameters %}
+
+{% for parameter in method.requiredParameters %}
+
+{% sp %}-{% camel_case parameter.codeName %}
+
+{% if parameter.enumType %}
+{% sp %}{{ parameter.enumType.elements.0.constantName }}{# this should be the enum's first option #}
+{% elif parameter.repeated %}
+{% sp %}@("some","strings"){# string[] #}
+{% else %}
+{% sp %}$Some{% camel_case parameter.codeName %}{% camel_case parameter.codeType %}
+{% endif %}
+
+{% endfor %}
+
+{% endif %}
+
+{% if method.requestType %}
+{% sp %}-{{ method.requestType.className }}Body{% sp %}$Some{{ method.requestType.className }}Obj
+{% endif %}
+
+{% endnoeol %}

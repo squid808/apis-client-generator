@@ -1,0 +1,49 @@
+{% comment %}
+
+
+subMaxForTotal: When encountering a Max variable, use Total instead
+includeMaxResults: Include the max results variable
+includePageToken: Include the page token variable
+
+{% endcomment %}{% for method in resource.methods %}{% if method.optionalParameters|length > 0 %}/// <summary>Optional parameters for the {{ resource.className }} {{ method.className }} method.</summary>
+public class {{ resource.className }}{{ method.className }}Properties
+{{% indent %}{% noeol %}
+
+        {% for p in method.optionalParameters %}
+{# FOR MAX RESULTS JUST SET IT TO A NON NULLABLE #}
+            {% if p.codeName == "maxResults" %}
+{% eol %}/// <summary>{{ p.description }}</summary>{% eol %}
+public int {% camel_case p.codeName %} = {% if p.maximum %}{{ p.maximum }}{% else %}{{ "0" }}{% endif %};{% eol %}
+{# DO NOT INCLUDE PAGE TOKEN SINCE THIS IS HANDLED IN THE PAGED RESULTS CODE #}
+            {% elif not p.codeName == "pageToken" %}{# TODO: THIS LEAVES A BLANK LINE INSTEAD #}
+{% eol %}/// <summary>{{ p.description }}</summary>{% eol %}
+public{% sp %}
+                {% if p.enumType %}
+{{ api.versionNoDots }}.{{ resource.parentResourceResourceChain }}{{ resource.className }}Resource.{% camel_case method.className %}Request.{% camel_case p.memberName %}Enum?
+                {% elif p.repeated %}
+Google.Apis.Util.Repeatable<string>
+               {% else %}
+                    {% if parameter.required %}
+{{ p.requiredType }}{% sp %}
+                    {% else %}
+{{ p.codeType }}{% sp %}
+                    {% endif %}
+                {% endif %}
+{% camel_case p.codeName %} = null;{% eol %}
+            {% endif %}
+        {% endfor %}
+
+{# INCLUDE CUSTOM PARAMS IF THIS IS A PAGED RESULT #}
+        {% if method.isPageable %}
+{% eol %}/// <summary>A delegate that is used to start a progress bar.</summary>{% eol %}
+public Action<string, string> StartProgressBar = null;{% eol %}
+{% eol %}
+/// <summary>A delegate that is used to update a progress bar.</summary>{% eol %}
+public Action<int, int, string, string> UpdateProgressBar = null;{% eol %}
+{% eol %}
+/// <summary>A counter for the total number of results to pull when iterating through paged results.</summary>{% eol %}
+public int TotalResults = 0;{% eol %}
+        {% endif %}
+{% endnoeol %}{% endindent %}}
+
+{% endif %}{% endfor %}

@@ -1,2 +1,5 @@
 *.pyc
 *.class
+.idea/
+src/googleapis/codegen/testdata/admin_directory_v1.json
+src/googleapis/codegen/testdata/
