@@ -10,13 +10,12 @@
 ///   <para>This automatically generated example serves to show the bare minimum required to call this Cmdlet.</para>
 ///   <para>Additional examples may be added, viewed and edited by users on the community wiki at the URL found in the related links.</para>
 /// </example>
-/// <para type="link" uri="https://github.com/squid808/gShell/wiki/{{ method.className }}G{{ api.className }}{{ resource.className }}">[Wiki page for this Cmdlet]</para>
+/// <para type="link" uri="https://github.com/squid808/gShell/wiki/{{ method.className }}-G{{ api.className }}{{ resource.className }}">[Wiki page for this Cmdlet]</para>
 /// <para type="link" uri="https://github.com/squid808/gShell/wiki/Getting-Started">[Getting started with gShell]</para>
 /// </summary>
 [Cmdlet({% as_posh_verb method.className %}, "G{{ api.className }}{% nodots resource.className %}",
-SupportsShouldProcess = true,
-{#  HelpUri = @"{{ api.documentationLink }}{{ api.version }}/reference/{{ resource.parentResourceChainUri }}{{ resource.codeName }}/{{ method.codeName }}")] #}
-  HelpUri = @"{{ api.documentationLink }}{{ api.version }}/reference/{{ resource.parentResourceChainUri }}{% nodots resource.codeName %}/{{ method.codeName }}")]
+SupportsShouldProcess = true,{#  HelpUri = @"{{ api.documentationLink }}{{ api.version }}/reference/{{ resource.parentResourceChainUri }}{{ resource.codeName }}/{{ method.codeName }}")] #}
+HelpUri = @"https://github.com/squid808/gShell/wiki/{{ method.className }}-G{{ api.className }}{{ resource.className }}")]{# HelpUri = @"{{ api.documentationLink }}{{ api.version }}/reference/{{ resource.parentResourceChainUri }}{% nodots resource.codeName %}/{{ method.codeName }}")] #}
 public class {{ method.className }}G{{ api.className }}{% nodots resource.className %}Command : {{ api.className }}ServiceAccountBase
 {
 {% indent %}#region Properties

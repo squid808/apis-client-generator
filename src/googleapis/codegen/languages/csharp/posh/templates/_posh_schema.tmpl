@@ -12,13 +12,14 @@
     ///   <para>This automatically generated example serves to show the bare minimum required to call this Cmdlet.</para>
     ///   <para>Additional examples may be added, viewed and edited by users on the community wiki at the URL found in the related links.</para>
     /// </example>
-    /// <para type="link" uri="https://github.com/squid808/gShell/wiki/NewG{{ api.className }}{{ schema.className }}Obj">[Wiki page for this Cmdlet]</para>
+    /// <para type="link" uri="https://github.com/squid808/gShell/wiki/New-G{{ api.className }}{{ schema.className }}Obj">[Wiki page for this Cmdlet]</para>
     /// <para type="link" uri="https://github.com/squid808/gShell/wiki/Getting-Started">[Getting started with gShell]</para>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "G{{ api.className }}{% nodots schema.className %}Obj",
-    SupportsShouldProcess = true)]
+    SupportsShouldProcess = true,
+    HelpUri = @"https://github.com/squid808/gShell/wiki/New-G{{ api.className }}{{ schema.className }}Obj")]
     [OutputType(typeof({{ api.module.name }}.Data.{{ schema.className }}))]
-    public class NewG{{ api.className }}{% nodots schema.className %}Obj : PSCmdlet
+    public class NewG{{ api.className }}{% nodots schema.className %}ObjCommand : PSCmdlet
     {
         #region Properties{% indent %}{% indent %}
         {% for parameter in schema.posh_params %}{% call_template _posh_params parameter=parameter %}{% endfor %}{% endindent %}{% endindent %}
