@@ -1,0 +1,46 @@
+
+/// <summary>
+/// <para type="synopsis">{{ method.description }}</para>
+/// <para type="description">{{ method.description }}</para>
+/// <list type="alertSet"><item><term>About this Cmdlet</term><description>
+/// Part of the gShell Project, relating to the Google {{ api.className }} API; see Related Links or use the -Online parameter.
+/// </description></item></list>
+/// <example>
+///   <code>{% call_template _posh_cmdlet_summary method=method %}</code>
+///   <para>This automatically generated example serves to show the bare minimum required to call this Cmdlet.</para>
+///   <para>Additional examples may be added, viewed and edited by users on the community wiki at the URL found in the related links.</para>
+/// </example>
+/// <para type="link" uri="https://github.com/squid808/gShell/wiki/{{ method.className }}-G{{ api.className }}{{ resource.className }}">[Wiki page for this Cmdlet]</para>
+/// <para type="link" uri="https://github.com/squid808/gShell/wiki/Getting-Started">[Getting started with gShell]</para>
+/// </summary>
+[Cmdlet({% as_posh_verb method.className %}, "G{{ api.className }}{% nodots resource.className %}",
+SupportsShouldProcess = true,{#  HelpUri = @"{{ api.documentationLink }}{{ api.version }}/reference/{{ resource.parentResourceChainUri }}{{ resource.codeName }}/{{ method.codeName }}")] #}
+HelpUri = @"https://github.com/squid808/gShell/wiki/{{ method.className }}-G{{ api.className }}{{ resource.className }}")]{# HelpUri = @"{{ api.documentationLink }}{{ api.version }}/reference/{{ resource.parentResourceChainUri }}{% nodots resource.codeName %}/{{ method.codeName }}")] #}
+public class {{ method.className }}G{{ api.className }}{% nodots resource.className %}Command : {{ api.className }}ServiceAccountBase
+{
+{% indent %}#region Properties
+{% for parameter in method.posh_parameters %}{% call_template _posh_params parameter=parameter %}{% endfor %}
+#endregion{% endindent %}
+
+    protected override void ProcessRecord()
+    {
+
+        if (ShouldProcess("{{ api.className }} {{ resource.className }}", "{{ method.className }}-G{{ api.className }}{{ resource.className }}"))
+        {{% if method.optionalParameters|length > 0 %}
+
+            var properties = new g{{ api.className }}.{{ resource.parentResourceChain }}{{ resource.className }}.{{ resource.className }}{{ method.className }}Properties()
+            {{% indent %}{% indent %}{% indent %}{% indent %}{% call_template _posh_set_custom_properties method=method %}{% endindent %}{% endindent %}{% endindent %}{% endindent %}
+            };
+        {% endif %}
+
+            {% noeol %}
+{% if method.finalReturnType %} WriteObject({% endif %}
+{{ resource.parentResourceChainLower }}{{ resource.codeName }}.{{ method.className }}(
+{% call_template _gshell_dotnet_methodparams method=method hideTypes=True showCustomProperties=True fullNamespace=True %}
+)
+{% if method.finalReturnType %}){% endif %}
+;{% endnoeol %}
+        }
+
+    }
+}

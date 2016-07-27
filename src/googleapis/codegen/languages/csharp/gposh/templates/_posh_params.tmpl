@@ -1,0 +1,27 @@
+
+
+{%if parameter.description %}{% noeol %}/// <summary>{% eol %}
+/// <para type="description">{{ parameter.description }}</para>{% eol %}
+/// </summary>{% endnoeol %}{% endif %}
+[Parameter(Position = {{parameter.paramPosition}},
+Mandatory = {% if parameter.required %}true{% else %}false{% endif %},{% if parameter.isSchema %}
+ValueFromPipeline = true,{% endif %}
+ValueFromPipelineByPropertyName = true{% if parameter.description %}{% noeol %},{%eol%}
+HelpMessage = {% literal parameter.description %}{% endnoeol %}{% endif %})]
+public{% noeol %}
+
+{% if parameter.isSchema %}
+ {{ api.module.name }}.Data.{{ method.requestType.className }} {{ method.requestType.className }}Body { get; set; }
+{% else %}
+{% if parameter.enumType %}
+ {{ resource.parentResourceResourceChain }}{{ resource.className }}Resource.{{ method.className }}Request.{% camel_case parameter.memberName %}Enum?
+{% elif parameter.repeated %}
+ string[]
+{% else %}
+{% if parameter.required %}
+ {{ parameter.requiredType }}
+{% else %}
+ {{ parameter.codeType }}
+{% endif %}{% endif %}
+ {{parameter.memberName}} { get; set; }
+{% endif %}{% endnoeol %}

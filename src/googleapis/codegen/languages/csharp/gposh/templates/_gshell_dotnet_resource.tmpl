@@ -1,0 +1,27 @@
+/// <summary>The {% literal resource.wireName %} collection of methods.</summary>
+public class {{ resource.className }}
+{{% indent %}
+{% noeol %}
+{% if resource.resources|length > 0 %}
+{% for subr in resource.resources %}
+
+/// <summary>Gets or sets the {{ subr.codeName }} resource class.</summary>{% eol %}
+
+public {{ subr.className }} {{ subr.codeName }}{ get; set; }{% eol %}{% eol %}
+{% endfor %}
+
+
+public {{ resource.className }}(){% eol %}
+{{% eol %}
+{% for subr in resource.resources %}
+
+    {{ subr.codeName }} = new {{ subr.className }}();{% eol %}
+
+{% endfor %}
+}{% eol %}
+{% endif %}
+{% endnoeol %}
+{% call_template _gshell_dotnet_method_properties resource=resource %}
+{% for method in resource.methods %}{% call_template _gshell_dotnet_resource_method method=method %}{% endfor %}
+{% for subr in resource.resources %}{% indent %}{% call_template _gshell_dotnet_resource resource=subr %}{% endindent %}{% endfor %}
+{% endindent %}}

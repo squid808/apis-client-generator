@@ -1,0 +1,9 @@
+
+
+namespace gShell.Cmdlets.{{ api.className }}.{{ resource.parentResourceChain }}{{ resource.className }}
+{
+{%indent%}
+{% for method in resource.methods %}{% call_template _posh_method method=method %}{% endfor %}
+{%endindent%}
+}
+{% for subr in resource.resources %}{% call_template _posh_resource resource=subr %}{% endfor %}
