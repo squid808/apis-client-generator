@@ -13,7 +13,7 @@ public class {{ resource.className }}{{ method.className }}Properties
 {# FOR MAX RESULTS JUST SET IT TO A NON NULLABLE #}
             {% if p.codeName == "maxResults" %}
 {% eol %}/// <summary>{{ p.description }}</summary>{% eol %}
-public int {% camel_case p.codeName %} = {% if p.maximum %}{{ p.maximum }}{% else %}{{ "0" }}{% endif %};{% eol %}
+public int? {% camel_case p.codeName %} = {% if p.maximum %}{{ p.maximum }}{% else %}{{ "null" }}{% endif %};{% eol %}
 {# DO NOT INCLUDE PAGE TOKEN SINCE THIS IS HANDLED IN THE PAGED RESULTS CODE #}
             {% elif not p.codeName == "pageToken" %}{# TODO: THIS LEAVES A BLANK LINE INSTEAD #}
 {% eol %}/// <summary>{{ p.description }}</summary>{% eol %}

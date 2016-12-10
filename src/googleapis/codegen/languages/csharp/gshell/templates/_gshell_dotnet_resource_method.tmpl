@@ -27,13 +27,13 @@ like a Function<> for a progress bar, and a TotalResults.
 {% endfilter %}
 {% endnoblank %}{% if method.isPageable %}{% noeol %}{% noblank %}
 public List<{{ api.module.name }}.Data.{{ method.finalReturnType }}> {{ method.className }}(
-    {% eol %}{% indent %}{% call_template _gshell_dotnet_methodparams method=method showCustomProperties=True includeSvcAcctInCall=True%}){% endindent %}
+    {% eol %}{% indent %}{% call_template _gshell_dotnet_methodparams method=method showCustomProperties=True includeSvcAcctInCall=False%}){% endindent %}
 {% endnoblank %}{% endnoeol %}
 {
     var results = new List<{{ api.module.name }}.Data.{{ method.finalReturnType }}>();
 
     {% noeol %}{% noblank %}
-    {{ api.versionNoDots }}.{% if resource.parentResourceResourceChain %}{{ resource.parentResourceResourceChain }}{% endif %}{{ resource.className }}Resource.{{ method.className }}Request request = GetService(gShellServiceAccount).
+    {{ api.versionNoDots }}.{% if resource.parentResourceResourceChain %}{{ resource.parentResourceResourceChain }}{% endif %}{{ resource.className }}Resource.{{ method.className }}Request request = GetService().
     {{ resource.parentResourceChain }}{{ resource.className }}.{{ method.className }}(
     {% if method.parameters %}{% call_template _gshell_dotnet_methodparams method=method hideTypes=True %}{% endif %});
     {% endnoblank %}{% endnoeol %}
@@ -51,7 +51,7 @@ public List<{{ api.module.name }}.Data.{{ method.finalReturnType }}> {{ method.c
     if (null != properties.StartProgressBar)
     {
         properties.StartProgressBar("Gathering {{ resource.className }}",
-            string.Format("-Collecting {{ resource.className }} 1 to {0}", {% if method.hasMaxResultsParameter %}request.MaxResults.ToString(){% else %}"unknown"{% endif %}));
+            string.Format("-Collecting {{ resource.className }} page 1"));
     }
 
     {{ api.module.name }}.Data.{{ method.finalReturnType }} pagedResult = request.Execute();
@@ -69,9 +69,8 @@ public List<{{ api.module.name }}.Data.{{ method.finalReturnType }}> {{ method.c
             if (null != properties.UpdateProgressBar)
             {
                 properties.UpdateProgressBar(5, 10, "Gathering {{ resource.className }}",
-                        string.Format("-Collecting {{ resource.className }} {0} to {1}",
-                            (results.Count + 1).ToString(),
-                            {% if method.hasMaxResultsParameter %}(results.Count + request.MaxResults).ToString(){% else %}"unknown"{% endif %}));
+                        string.Format("-Collecting {{ resource.className }} page {0}",
+                            (results.Count + 1).ToString()));
             }
             pagedResult = request.Execute();
             results.Add(pagedResult);
@@ -80,7 +79,7 @@ public List<{{ api.module.name }}.Data.{{ method.finalReturnType }}> {{ method.c
         if (null != properties.UpdateProgressBar)
         {
             properties.UpdateProgressBar(1, 2, "Gathering {{ resource.className }}",
-                    string.Format("-Returning {0} results.", results.Count.ToString()));
+                    string.Format("-Returning {0} pages.", results.Count.ToString()));
         }
     }
 
@@ -89,12 +88,29 @@ public List<{{ api.module.name }}.Data.{{ method.finalReturnType }}> {{ method.c
 
 {% else %}{# NOT PAGEABLE #}{% noeol %}
 public {% if method.finalReturnType %}{{ api.module.name }}.Data.{{ method.finalReturnType }}{% else %}void{% endif %}{% sp %}{{ method.className }} (
-{% call_template _gshell_dotnet_methodparams method=method showCustomProperties=True includeSvcAcctInCall=True %}
+{% call_template _gshell_dotnet_methodparams method=method showCustomProperties=True includeSvcAcctInCall=False %}
 )
 {% endnoeol %}
 {
 {% noeol %}{% indent %}
-{% if method.finalReturnType %}return {% endif %}GetService(gShellServiceAccount).{{ resource.parentResourceChain }}{{ resource.className }}.{{ method.className}}({% call_template _gshell_dotnet_methodparams method=method hideTypes=True %}).Execute();{% eol %}
+
+{% noeol %}{% noblank %}
+var request = GetService().
+{{ resource.parentResourceChain }}{{ resource.className }}.{{ method.className }}(
+{% call_template _gshell_dotnet_methodparams method=method hideTypes=True %});
+{% endnoblank %}{% endnoeol %}{% eol %}
+{% eol %}
+{% if method.optionalParameters|length > 0 %}if (properties != null)
+{{% noeol %}{% noblank %}{% eol %}
+
+        {% for p in method.optionalParameters %}
+        {% if not p.codeName == "pageToken" %}
+        request.{% if p.enumType %}{% camel_case p.codeName %}{% else %}{% camel_case p.codeName %}{% endif %} = properties.{% camel_case p.codeName %};{% eol %}
+        {% endif %}{% endfor %}
+        {% endnoblank %}{% endnoeol %}
+}{% endif %}{% eol %}{% eol %}
+
+{% if method.finalReturnType %}return {% endif %}request.Execute();{% eol %}
 {% endindent %}
 }
 {% eol %}
@@ -102,12 +118,28 @@ public {% if method.finalReturnType %}{{ api.module.name }}.Data.{{ method.final
 
 {% if method.supportsMediaUpload %}{% noeol %}
 public void {{ method.className }} (
-{% call_template _gshell_dotnet_methodparams method=method showCustomProperties=True includeSvcAcctInCall=True supportMediaUpload=True %}
+{% call_template _gshell_dotnet_methodparams method=method showCustomProperties=True includeSvcAcctInCall=False supportMediaUpload=True %}
 )
 {% endnoeol %}
 {
 {% noeol %}{% indent %}
-GetService(gShellServiceAccount).{{ resource.parentResourceChain }}{{ resource.className }}.{{ method.className}}({% call_template _gshell_dotnet_methodparams method=method hideTypes=True supportMediaUpload=True %}).Upload();{% eol %}
+{% noeol %}{% noblank %}
+var request = GetService().
+{{ resource.parentResourceChain }}{{ resource.className }}.{{ method.className }}(
+{% call_template _gshell_dotnet_methodparams method=method hideTypes=True  supportMediaUpload=True%});
+{% endnoblank %}{% endnoeol %}{% eol %}
+{% eol %}
+{% if method.optionalParameters|length > 0 %}if (properties != null)
+{{% noeol %}{% noblank %}{% eol %}
+
+        {% for p in method.optionalParameters %}
+        {% if not p.codeName == "pageToken" %}
+        request.{% if p.enumType %}{% camel_case p.codeName %}{% else %}{% camel_case p.codeName %}{% endif %} = properties.{% camel_case p.codeName %};{% eol %}
+        {% endif %}{% endfor %}
+        {% endnoblank %}{% endnoeol %}
+}{% endif %}{% eol %}{% eol %}
+
+request.Upload();{% eol %}
 {% endindent %}
 }
 {% endnoeol %}
