@@ -44,7 +44,7 @@ using g{{ api.className }} = gShell.dotNet.{{ api.className }};
 /// <summary>
 /// A PowerShell-ready wrapper for the {{ api.className }} api, as well as the resources and methods therein.
 /// </summary>
-public abstract class {{ api.className }}Base : AuthenticatedCmdletBase
+public abstract class {{ api.className }}Base : StandardParamsCmdletBase
 {{% indent %}
 
 #region Properties

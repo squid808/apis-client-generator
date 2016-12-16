@@ -27,7 +27,7 @@ like a Function<> for a progress bar, and a TotalResults.
 {% endfilter %}
 {% endnoblank %}{% if method.isPageable %}{% noeol %}{% noblank %}
 public List<{{ api.module.name }}.Data.{{ method.finalReturnType }}> {{ method.className }}(
-    {% eol %}{% indent %}{% call_template _gshell_dotnet_methodparams method=method showCustomProperties=True includeSvcAcctInCall=False%}){% endindent %}
+    {% eol %}{% indent %}{% call_template _gshell_dotnet_methodparams method=method showCustomProperties=True includeStdQueryParams=True%}){% endindent %}
 {% endnoblank %}{% endnoeol %}
 {
     var results = new List<{{ api.module.name }}.Data.{{ method.finalReturnType }}>();
@@ -37,6 +37,12 @@ public List<{{ api.module.name }}.Data.{{ method.finalReturnType }}> {{ method.c
     {{ resource.parentResourceChain }}{{ resource.className }}.{{ method.className }}(
     {% if method.parameters %}{% call_template _gshell_dotnet_methodparams method=method hideTypes=True %}{% endif %});
     {% endnoblank %}{% endnoeol %}
+
+    if (StandardQueryParams != null) {
+        request.Fields = StandardQueryParams.fields;
+        request.QuotaUser = StandardQueryParams.quotaUser;
+        request.UserIp = StandardQueryParams.userIp;
+    }
 
     {% if method.optionalParameters|length > 0 %}if (properties != null)
     {{% noeol %}{% noblank %}{% eol %}
@@ -88,7 +94,7 @@ public List<{{ api.module.name }}.Data.{{ method.finalReturnType }}> {{ method.c
 
 {% else %}{# NOT PAGEABLE #}{% noeol %}
 public {% if method.finalReturnType %}{{ api.module.name }}.Data.{{ method.finalReturnType }}{% else %}void{% endif %}{% sp %}{{ method.className }} (
-{% call_template _gshell_dotnet_methodparams method=method showCustomProperties=True includeSvcAcctInCall=False %}
+{% call_template _gshell_dotnet_methodparams method=method showCustomProperties=True includeStdQueryParams=True %}
 )
 {% endnoeol %}
 {
@@ -99,6 +105,12 @@ var request = GetService().
 {{ resource.parentResourceChain }}{{ resource.className }}.{{ method.className }}(
 {% call_template _gshell_dotnet_methodparams method=method hideTypes=True %});
 {% endnoblank %}{% endnoeol %}{% eol %}
+{% eol %}
+if (StandardQueryParams != null) {{% eol %}
+    request.Fields = StandardQueryParams.fields;{% eol %}
+    request.QuotaUser = StandardQueryParams.quotaUser;{% eol %}
+    request.UserIp = StandardQueryParams.userIp;{% eol %}
+}{% eol %}
 {% eol %}
 {% if method.optionalParameters|length > 0 %}if (properties != null)
 {{% noeol %}{% noblank %}{% eol %}
@@ -118,7 +130,7 @@ var request = GetService().
 
 {% if method.supportsMediaUpload %}{% noeol %}
 public void {{ method.className }} (
-{% call_template _gshell_dotnet_methodparams method=method showCustomProperties=True includeSvcAcctInCall=False supportMediaUpload=True %}
+{% call_template _gshell_dotnet_methodparams method=method showCustomProperties=True includeStdQueryParams=True supportMediaUpload=True %}
 )
 {% endnoeol %}
 {

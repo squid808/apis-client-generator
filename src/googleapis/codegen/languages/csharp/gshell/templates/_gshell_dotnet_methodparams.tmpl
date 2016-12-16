@@ -6,7 +6,7 @@ Template Parameters:
 hideTypes: hide the type of the parameter. Used when being called from anything other than a signature
 showCustomProperties: show the custom properties (like UsersListProperties) for gShell. Useful when declaring a method signature.
 fullNamespace: put the full namespace in front of the optional parameters, for use in the cmdlets files
-includeSvcAcctInCall: whether or not to include the service account for gShell in the call
+includeStdQueryParams: whether or not to include the service account for gShell in the call
 supportMediaUpload: whether or not to include params for supporting media upload
 useCaps: whether or not to use capitals at the beginning of each parameter
 {% endcomment %}{% noeol %}
@@ -75,9 +75,9 @@ properties
     {% endif %}
 {% endif %}
 
-{% if includeSvcAcctInCall %}
+{% if includeStdQueryParams %}
     {% parameter %}
-        {% if not hideTypes %}string {% endif %}gShellServiceAccount{% if not hideTypes %} = null{% endif %}
+        {% if not hideTypes %}gShell.dotNet.Utilities.OAuth2.StandardQueryParameters {% endif %}StandardQueryParams{% if not hideTypes %} = null{% endif %}
     {% end_parameter %}
 {% endif %}
 
